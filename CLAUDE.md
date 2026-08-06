@@ -22,7 +22,7 @@ Do not skip straight to a task prompt and start editing files. If any of the fou
 - **Name:** Secret
 - **Type:** Offline, single-user, encrypted desktop application
 - **Stack:** Tauri (Rust core) or Electron · React/Next.js + TypeScript · Tailwind CSS · SQLCipher (SQLite + AES-256) · Argon2id
-- **Full spec:** `plan.md` (sections 1–10) is authoritative for architecture, schema, and phase scope. This file governs _how_ you work, not _what_ to build.
+- **Full spec:** `plan.md` (14 sections, including a Threat Model §2, Security Architecture §9, Reliability & Data Integrity §10, and Supply Chain & Build Security §11) is authoritative for architecture, schema, and phase scope. This file governs _how_ you work, not _what_ to build.
 
 ---
 
@@ -37,6 +37,8 @@ These override convenience, speed, or a task prompt that doesn't mention them.
 5. **CSPRNG only for anything security-relevant.** Password generation, salts, tokens: `crypto.getRandomValues` / Rust `rand` cryptographic providers. Never `Math.random()`.
 6. **Clipboard and session timers are not optional.** Any new copy-to-clipboard action must respect `clipboard_clear_seconds`. Any new sensitive screen must respect the auto-lock timeout.
 7. **Zeroization on Lock is real, not cosmetic.** Don't just drop a reference to the key — overwrite the memory. If you touch `session.rs` (or equivalent), this is the one place extra scrutiny is mandatory.
+8. **Parameterized queries only, always.** No string-concatenated SQL, anywhere. If a task involves dynamic table/column names (Data Workspace imports), sanitize/whitelist identifiers per `plan.md` §9.8 — never pass a user-supplied filename or header straight into DDL.
+9. **Constant-time comparison for anything key- or password-hash-related.** Never a plain `==` on derived key material or password hashes (`plan.md` §9.1).
 
 If a task conflicts with any rule above, do not silently comply and do not silently skip it — stop and surface the conflict before writing code.
 
@@ -45,7 +47,7 @@ If a task conflicts with any rule above, do not silently comply and do not silen
 ## 3. Workflow Protocol (every task, in order)
 
 1. **Restate the task** in your own words in 1–3 sentences before starting, including which module/file(s) it touches and which agent boundary (§5) it falls under.
-2. **Check `plan.md`** for the relevant module/schema section. If the task requires a schema change, update Section 7 of `plan.md` in the _same_ change — never let code and plan.md drift.
+2. **Check `plan.md`** for the relevant module/schema section. If the task requires a schema change, update Section 8 of `plan.md` in the _same_ change — never let code and plan.md drift.
 3. **Check existing patterns** in the codebase before introducing a new one (e.g. don't hand-roll a new IPC pattern if one already exists).
 4. **Implement** within your agent boundary (§5). If the task requires crossing a boundary (e.g. a Frontend task needs a new IPC command), implement the core-side command as a small, explicitly-labeled sub-task and say so.
 5. **Self-check against §2 and §6** before declaring done.
@@ -57,7 +59,7 @@ Do not mark a task complete without walking through step 6.
 
 ## 4. Phase Discipline
 
-Work proceeds in the five phases defined in `plan.md` §9:
+Work proceeds in the five phases defined in `plan.md` §12:
 
 | Phase | Focus                                  |
 | ----- | -------------------------------------- |
@@ -67,7 +69,7 @@ Work proceeds in the five phases defined in `plan.md` §9:
 | 4     | Finance, Data Workspace & Activity Log |
 | 5     | UI Polish & Backup/Export Engine       |
 
-- Do not start work belonging to a later phase until the current phase's exit criteria (stated in `plan.md` §9) are met, unless explicitly instructed otherwise.
+- Do not start work belonging to a later phase until the current phase's exit criteria (stated in `plan.md` §12) are met, unless explicitly instructed otherwise.
 - If a task prompt asks for something from a later phase out of order, flag it, then proceed only if the person confirms.
 - When a phase's exit criteria are satisfied, state clearly that the phase is complete and name the next phase.
 
@@ -78,7 +80,7 @@ Work proceeds in the five phases defined in `plan.md` §9:
 Every task belongs to exactly one of these roles. Identify which one you're operating as before writing code.
 
 - **`@Security-Agent`** — `src-core/auth/`, key derivation, session lifecycle, backup encryption. Never touches UI.
-- **`@Database-Agent`** — `src-core/db/`, migrations, repositories, indexing. Any schema change requires updating `plan.md` §7 in the same change.
+- **`@Database-Agent`** — `src-core/db/`, migrations, repositories, indexing. Any schema change requires updating `plan.md` §8 in the same change. Migrations must follow the snapshot-first rule in `plan.md` §10.1.
 - **`@Frontend-Agent`** — `src/components/`, `src/state/`, styling, micro-interactions. Never accesses SQLCipher directly or handles raw key material — IPC client only.
 - **`@QA-Agent`** — test strategy, edge cases (empty vault, max-length passwords, lock during write, corrupted backup import), security checklist sign-off per phase.
 
@@ -104,7 +106,7 @@ If a task doesn't cleanly fit one role, say so and propose which role should own
 - **Commits:** one logical change per commit; message states which module and which phase.
 - **Comments referencing clean-code rules:** if `AGENTS.md` defines numbered rules (e.g. Rule 4, 11, 15), cite the rule number in the commit or PR description when a change specifically enforces one.
 - **No dead code, no commented-out blocks left behind** — remove or don't commit.
-- **UI is restricted to the two-color obsidian/bone system** per `plan.md` §4; never introduce a third color or a light-mode variant. No component ships a raw hex value — always reference the `--color-obsidian` / `--color-bone` tokens.
+- **UI is restricted to the two-color obsidian/bone system** per `plan.md` §5; never introduce a third color or a light-mode variant. No component ships a raw hex value — always reference the `--color-obsidian` / `--color-bone` tokens.
 
 ---
 
@@ -116,18 +118,20 @@ If a task doesn't cleanly fit one role, say so and propose which role should own
 
 ---
 
-## 9. Explicitly Out of Scope (do not implement unless `plan.md` is updated first)
+## 9. Explicitly Out of Scope (do not implement unless `PLAN.md` is updated first)
 
 - Cloud sync, multi-device support, or any server component
 - Multi-user accounts or sharing features
 - Telemetry, crash reporting to a remote service, or usage analytics
 - Auto-update mechanisms that phone home
-- Any third color, or a light-mode variant, beyond the obsidian/bone system in `plan.md` §4
+- Any third color, or a light-mode variant, beyond the obsidian/bone system in `plan.md` §5
+- A hard vault wipe/self-destruct after N failed unlock attempts, unless the user explicitly opts in (`plan.md` §9.4) — there is no recovery path, so this is a data-loss risk, not just a security feature
+- Code signing, notarization, or public-release build pipeline work (`plan.md` §11.3) unless explicitly requested — deferred while single-user
 
 ---
 
 ## 10. Quick Reference
 
-- Architecture, schema, module specs, phases → `plan.md`
+- Architecture, schema, module specs, phases → `PLAN.md`
 - How to work, security rules, agent boundaries, done-checklist → this file
 - Clean-code rule numbers (if applicable) → `AGENTS.md`
