@@ -9,11 +9,11 @@
 
 1. `CLAUDE.md` (this file) — how to work
 2. `plan.md` — what to build (architecture, schema, phases, module specs)
-3. `AGENTS.md` (if present) — clean-code rule numbers referenced in code comments
+3. `AGENTS.md` — who you are for this task: the specialist persona, ownership boundary, and numbered clean-code rules for the role you're operating as
 4. Current phase status (see §4) — where we are right now
 5. Only then: open the relevant source files
 
-Do not skip straight to a task prompt and start editing files. If any of the four files above are missing or contradict each other, stop and report the conflict instead of proceeding on assumption.
+Do not skip straight to a task prompt and start editing files. If any of the files above are missing or contradict each other, stop and report the conflict instead of proceeding on assumption.
 
 ---
 
@@ -77,14 +77,18 @@ Work proceeds in the five phases defined in `plan.md` §12:
 
 ## 5. Agent Role Boundaries
 
+Full persona detail, philosophy, and instinctive review checklists for each agent live in `AGENTS.md` — read it before working as any of these roles. This section is the quick-reference summary; `AGENTS.md` is authoritative if the two ever diverge.
+
 Every task belongs to exactly one of these roles. Identify which one you're operating as before writing code.
 
-- **`@Security-Agent`** — `src-core/auth/`, key derivation, session lifecycle, backup encryption. Never touches UI.
-- **`@Database-Agent`** — `src-core/db/`, migrations, repositories, indexing. Any schema change requires updating `plan.md` §8 in the same change. Migrations must follow the snapshot-first rule in `plan.md` §10.1.
-- **`@Frontend-Agent`** — `src/components/`, `src/state/`, styling, micro-interactions. Never accesses SQLCipher directly or handles raw key material — IPC client only.
-- **`@QA-Agent`** — test strategy, edge cases (empty vault, max-length passwords, lock during write, corrupted backup import), security checklist sign-off per phase.
+- **`@UIUX-Agent`** — design system, information architecture, interaction patterns. Never writes implementation code.
+- **`@Frontend-Agent`** — `src/components/`, `src/state/`, `src/lib/`, Tailwind implementation, IPC client. Never accesses SQLCipher directly or handles raw key material — IPC client only.
+- **`@Backend-Agent`** — `src-core/db/`, `src-core/ipc/`, `src-core/import/`, migrations, repositories, indexing. Any schema change requires updating `plan.md` §8 in the same change, and migrations must follow the snapshot-first rule in `plan.md` §10.1.
+- **`@Security-Agent`** — `src-core/auth/`, `src-core/backup/`, key derivation, session lifecycle, backup encryption. No UI work, and sole reviewer on any change touching key material regardless of who wrote it.
+- **`@DevOps-Agent`** — dependencies, CI/audit config, build scripts, code signing/release (deferred, `plan.md` §11.3), backup/snapshot infrastructure.
+- **`@QA-Agent`** — test strategy, edge cases (empty vault, max-length passwords, lock during write, corrupted backup import, malicious CSV headers, restart during lockout), phase-exit sign-off (`plan.md` §12), Definition of Done verification.
 
-If a task doesn't cleanly fit one role, say so and propose which role should own it rather than blending responsibilities silently.
+If a task doesn't cleanly fit one role, say so and propose which role should own it rather than blending responsibilities silently. For cross-boundary tasks, use the handoff format defined in `AGENTS.md` §8.
 
 ---
 
@@ -104,7 +108,7 @@ If a task doesn't cleanly fit one role, say so and propose which role should own
 - **TypeScript:** strict mode, no implicit `any`, no `@ts-ignore` without an inline justification comment.
 - **Rust (if Tauri):** no `unwrap()` on anything touching key material or DB I/O — handle errors explicitly.
 - **Commits:** one logical change per commit; message states which module and which phase.
-- **Comments referencing clean-code rules:** if `AGENTS.md` defines numbered rules (e.g. Rule 4, 11, 15), cite the rule number in the commit or PR description when a change specifically enforces one.
+- **Comments referencing clean-code rules:** `AGENTS.md` §1 defines the numbered engineering rules (1–25) shared by every agent. Cite the rule number in the commit or PR description when a change specifically exists to satisfy one (e.g. "Rule 8" for a parameterized-query fix).
 - **No dead code, no commented-out blocks left behind** — remove or don't commit.
 - **UI is restricted to the two-color obsidian/bone system** per `plan.md` §5; never introduce a third color or a light-mode variant. No component ships a raw hex value — always reference the `--color-obsidian` / `--color-bone` tokens.
 
@@ -118,7 +122,7 @@ If a task doesn't cleanly fit one role, say so and propose which role should own
 
 ---
 
-## 9. Explicitly Out of Scope (do not implement unless `PLAN.md` is updated first)
+## 9. Explicitly Out of Scope (do not implement unless `plan.md` is updated first)
 
 - Cloud sync, multi-device support, or any server component
 - Multi-user accounts or sharing features
@@ -132,6 +136,6 @@ If a task doesn't cleanly fit one role, say so and propose which role should own
 
 ## 10. Quick Reference
 
-- Architecture, schema, module specs, phases → `PLAN.md`
+- Architecture, schema, module specs, phases → `plan.md`
 - How to work, security rules, agent boundaries, done-checklist → this file
-- Clean-code rule numbers (if applicable) → `AGENTS.md`
+- Who you are, specialist depth, numbered clean-code rules, handoff protocol → `AGENTS.md`
