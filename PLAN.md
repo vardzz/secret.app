@@ -317,4 +317,4 @@ Delegated instructions should be issued in the form:
 2. All new sensitive-data mutations produce a corresponding `activity_logs` row.
 3. No new runtime network call is introduced (verify via a network-monitor smoke test).
 4. TypeScript strict mode passes with zero `any` on any file touching credential or key data.
-5. This `plan.md` is updated in the same PR if architecture, schema, or phase scope changes.
+5. This `PLAN.md` is updated in the same PR if architecture, schema, or phase scope changes.
