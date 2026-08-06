@@ -1,4 +1,4 @@
-# 🔐 SECRET — Master Project Plan (PLAN.md)
+# 🔐 SECRET — Master Project Plan (plan.md)
 
 **Single-User, Offline-First, Encrypted Desktop Workspace**
 
@@ -22,7 +22,7 @@
 2. All persisted data lives inside a single SQLCipher-encrypted database file.
 3. Master key material exists in memory only, is zeroized on lock/timeout/exit, and is never logged, serialized, or written to disk in plaintext.
 4. Every write to sensitive tables must be paired with an `activity_logs` entry.
-5. UI must default to dark mode; there is no "light mode" requirement in v1.
+5. UI is dark by default and restricted to the two-color system defined in §4 (`#0F0E0D` obsidian, `#F4EDE4` bone) — no third color, no light-mode variant in v1.
 
 ---
 
@@ -102,7 +102,7 @@ secret/
 │   │   ├── password-gen.ts    # Client-side generator (no key material)
 │   │   └── entropy.ts
 │   ├── state/                 # Session/auth state, lock state
-│   └── styles/                # Tailwind config, dark theme tokens
+│   └── styles/                # Tailwind config wired to §4 obsidian/bone tokens
 ├── plan.md                    # ← this file
 └── README.md
 ```
@@ -125,16 +125,106 @@ secret/
 
 ---
 
-## 4. Credential Creation & Smart Password Generator
+## 4. Design System & Visual Identity
 
-### 4.1 Credential Modal Fields
+> This section is binding for every screen, component, and state in the app. No component ships with a color, gradient, or visual treatment outside what's defined here without this section being updated first.
+
+### 4.1 Design Philosophy
+
+Minimalist, premium, quiet-luxury. The interface should feel like a high-end hardware product (think: a premium safe, not a SaaS dashboard) — restrained, confident, dark, with cream/bone accents used sparingly as the "reveal" moment (unlocked state, active selections, primary actions). No visual noise: no drop shadows stacked on drop shadows, no more than one accent treatment per screen, generous whitespace, and typography doing most of the hierarchy work rather than color.
+
+### 4.2 Color System — Two Colors Only
+
+| Token                     | Hex       | Role                                                            |
+| ------------------------- | --------- | --------------------------------------------------------------- |
+| `--color-obsidian` (base) | `#0F0E0D` | Primary background, near-black surfaces, default UI chrome      |
+| `--color-bone` (accent)   | `#F4EDE4` | Primary text, primary buttons, active/focus states, key accents |
+
+**Hard rule: no third color is introduced.** All depth, hierarchy, and state are created through opacity/alpha variants and gradient blends of these two colors only — never a new hue (no blues for "info," no reds for "error" as a _color swap_; use bone-on-obsidian weight/opacity/iconography instead, per §4.5).
+
+**Derived tokens (opacity variants, not new colors):**
+
+```css
+:root {
+  --color-obsidian: #0f0e0d;
+  --color-bone: #f4ede4;
+
+  /* Obsidian surface layers — for depth without a new hue */
+  --surface-base: var(--color-obsidian);
+  --surface-raised: rgba(244, 237, 228, 0.03); /* card on top of base */
+  --surface-raised-hover: rgba(244, 237, 228, 0.06);
+  --border-subtle: rgba(244, 237, 228, 0.08);
+  --border-default: rgba(244, 237, 228, 0.14);
+
+  /* Bone text/foreground layers */
+  --text-primary: var(--color-bone);
+  --text-secondary: rgba(244, 237, 228, 0.64);
+  --text-tertiary: rgba(244, 237, 228, 0.38);
+  --text-disabled: rgba(244, 237, 228, 0.2);
+
+  /* Interactive */
+  --accent-solid: var(--color-bone);
+  --accent-on-accent: var(
+    --color-obsidian
+  ); /* text/icon color when sitting ON a bone-filled element */
+}
+```
+
+### 4.3 Gradient Usage (the only two-color gradient permitted)
+
+- **Primary gradient:** `linear-gradient(135deg, #0F0E0D 0%, #1A1815 100%)` — an obsidian-only gradient (subtle lightening, not toward bone) used on large background surfaces (app shell, sidebar, dashboard hero) to avoid a flat, cheap-looking fill.
+- **Accent gradient (sparingly):** `linear-gradient(135deg, #F4EDE4 0%, #E4D9C8 100%)` — a bone-only gradient (subtle warming, not toward obsidian) used only on primary CTAs (`Unlock`, `Save`, `Generate Password`) and the active nav-item indicator. Max one accent-gradient element visible per screen at rest.
+- **Never blend obsidian directly into bone in a single gradient** (i.e. no `linear-gradient(#0F0E0D, #F4EDE4)`). That reads as a generic dark-mode toggle effect, not premium — it also fails contrast in the middle of the blend. Keep the two gradients (§ obsidian-family, § bone-family) visually separate; let sharp edges/borders do the contrast work between them, not a blended transition.
+
+### 4.4 Typography
+
+- **Primary typeface:** a refined sans (e.g. `Inter`, `Söhne`, or `General Sans`) for UI chrome; bundled locally as a font file — no CDN/Google Fonts fetch (violates the offline constraint in §0).
+- **Monospace:** for anything data-like — passwords (masked/unmasked), entropy bits, table/grid contents, activity-log timestamps, note code blocks. Bundled locally (e.g. `JetBrains Mono` or `IBM Plex Mono`).
+- **Hierarchy via weight and size, not color:** headings at 500–600 weight, body at 400, secondary/meta text uses `--text-secondary` opacity rather than a lighter tint — do not introduce grays outside the bone-opacity scale.
+- **Letter-spacing:** slightly widened tracking (`0.01–0.02em`) on all-caps labels (section headers, badges) to reinforce the premium/editorial feel.
+
+### 4.5 State & Semantic Meaning Without New Colors
+
+Since only obsidian and bone exist, status/priority/severity must be communicated through **weight, opacity, iconography, and shape** — not hue:
+
+- **Priority badges** (`Low`/`Medium`/`High`): differentiate via filled vs. outlined vs. bold-filled bone treatment, plus an icon (dot / half-fill / full-fill), not red/yellow/green.
+- **Task status columns:** differentiate via border weight and background opacity step (`To Do` = subtle outline only, `In Progress` = `--surface-raised`, `Done` = `--surface-raised` + reduced text opacity to imply completion/fade).
+- **Errors / failed unlock:** communicated via icon (e.g. an alert glyph), motion (a subtle shake), and bone-on-obsidian at full opacity with bold weight — not a red state. If a task genuinely requires a distinct error color, flag it for explicit sign-off before adding a third hue; the default expectation is _no third color, ever_.
+- **Favorites / active states:** solid bone fill with obsidian icon/text on top (`--accent-on-accent`), reserved for the single most important action or item on a given screen.
+
+### 4.6 Component Treatment
+
+- **Cards:** `--surface-raised` background, 1px `--border-subtle`, generous internal padding (24–32px), no drop shadow at rest; on hover, border steps to `--border-default` and background to `--surface-raised-hover` — no shadow, no scale-jump; a slow (150–200ms) ease is enough.
+- **Buttons — primary:** accent-gradient fill (§4.3), `--accent-on-accent` text, no border, subtle press-state scale (0.98).
+- **Buttons — secondary/ghost:** transparent fill, `--border-default`, `--text-primary` text.
+- **Inputs:** transparent/`--surface-raised` background, `--border-subtle` at rest, `--border-default` or full-opacity bone on focus (no glow/box-shadow halo — a clean border-color shift only).
+- **Modals:** `--surface-base` with a slightly stepped-up obsidian gradient (§4.3) and a 1px `--border-subtle` edge; avoid a heavy scrim — a light obsidian-at-70%-opacity backdrop is enough given the app is already dark.
+- **Icons:** single-weight line icons only (no filled/line mixing), always bone at `--text-primary` or `--text-secondary`, never a third color.
+
+### 4.7 Motion
+
+- Motion is restrained and functional, never decorative-for-its-own-sake: unlock transition, card hover, tab switch, modal open/close.
+- Standard easing: `cubic-bezier(0.16, 1, 0.3, 1)` (a confident, premium "settle" curve), 150–250ms for micro-interactions, up to 400ms for the unlock/lock full-screen transition.
+- No bouncy/spring overshoot — it reads as playful, not premium.
+
+### 4.8 Accessibility Within a Two-Color System
+
+- Body text (`--text-primary` on `--surface-base`) must maintain ≥ 7:1 contrast — `#F4EDE4` on `#0F0E0D` comfortably exceeds this.
+- Secondary text (`--text-secondary`, 64% opacity) must still clear ≥ 4.5:1 — verify against `--surface-base`, not against a raised card, since opacity math compounds when stacked on `--surface-raised`.
+- Never drop below `--text-tertiary` (38%) for anything conveying information — reserve sub-38% opacity purely for disabled states.
+
+---
+
+## 5. Credential Creation & Smart Password Generator
+
+### 5.1 Credential Modal Fields
 
 - **Account Name** — friendly label (e.g. `GitHub Main`)
 - **Provider URL** — domain used to resolve a brand icon locally (bundled icon set + simple domain matcher; no live favicon fetching, since that would violate the offline constraint)
 - **Username / Email** — plain text, single-click copy
 - **Password** — obfuscated input, visibility toggle, fast copy, "Generate" button wired to the Smart Generator
 
-### 4.2 Smart Password Generator
+### 5.2 Smart Password Generator
 
 - **Length Slider:** 8–64 characters, default 18
 - **Rule toggles:** Uppercase (`A-Z`), Lowercase (`a-z`), Digits (`0-9`), Symbols (`!@#$%^&*()_+-=[]{}|;:,.<>?`), Exclude Ambiguous (`1 l I 0 O`)
@@ -143,20 +233,20 @@ secret/
 
 ---
 
-## 5. Technical Stack
+## 6. Technical Stack
 
-| Layer                | Choice                                     | Rationale                                                                               |
-| -------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------- |
-| Desktop Shell        | **Tauri (Rust)** — preferred over Electron | ~15MB footprint, native Rust memory safety for the key-holding core process             |
-| Frontend             | **React / Next.js + TypeScript**           | Strict typing across IPC boundary reduces class of runtime bugs touching sensitive data |
-| Styling              | **Tailwind CSS**                           | Fast, consistent dark-mode + luxury-minimal design tokens                               |
-| Database             | **SQLCipher (SQLite + AES-256)**           | Full-database encryption at rest, battle-tested                                         |
-| Key Derivation       | **Argon2id**                               | Memory-hard, GPU/ASIC brute-force resistant                                             |
-| Animation (optional) | **Framer Motion**                          | Micro-interactions on unlock, card transitions                                          |
+| Layer                | Choice                                                                                       | Rationale                                                                                                    |
+| -------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Desktop Shell        | **Tauri (Rust)** — preferred over Electron                                                   | ~15MB footprint, native Rust memory safety for the key-holding core process                                  |
+| Frontend             | **React / Next.js + TypeScript**                                                             | Strict typing across IPC boundary reduces class of runtime bugs touching sensitive data                      |
+| Styling              | **Tailwind CSS**, configured with the `--color-obsidian` / `--color-bone` token system in §4 | Fast, consistent enforcement of the two-color minimalist-premium system — no ad-hoc hex values in components |
+| Database             | **SQLCipher (SQLite + AES-256)**                                                             | Full-database encryption at rest, battle-tested                                                              |
+| Key Derivation       | **Argon2id**                                                                                 | Memory-hard, GPU/ASIC brute-force resistant                                                                  |
+| Animation (optional) | **Framer Motion**                                                                            | Micro-interactions on unlock, card transitions                                                               |
 
 ---
 
-## 6. Database Schema (authoritative DDL)
+## 7. Database Schema (authoritative DDL)
 
 ```sql
 -- Vault Credentials
@@ -247,7 +337,7 @@ CREATE TABLE app_settings (
 
 ---
 
-## 7. Security Architecture Detail
+## 8. Security Architecture Detail
 
 - **Key derivation:** Argon2id, tuned for ≥ 500ms derivation time on target hardware (memory cost ≥ 64MB, iterations tuned accordingly). Salt stored alongside the encrypted DB header, never reused.
 - **RAM hardening:** derived key stored in a locked/pinned memory region where the platform allows it (`mlock` equivalent); zeroized byte-by-byte on `Lock`, idle timeout, or app exit — not just dereferenced.
@@ -257,7 +347,7 @@ CREATE TABLE app_settings (
 
 ---
 
-## 8. Phased Implementation Roadmap
+## 9. Phased Implementation Roadmap
 
 ### Phase 1 — Core Auth & Encryption Engine
 
@@ -290,19 +380,19 @@ CREATE TABLE app_settings (
 
 ### Phase 5 — UI Polish & Backup/Export Engine
 
-- Dark-mode visual polish, minimal-luxury typography pass, micro-interactions
+- Full application of the §4 Design System (obsidian/bone tokens, gradients, typography, motion) across every screen; audit for any stray third color or ad-hoc hex value
 - `.enc` encrypted backup export/import engine
 - Settings screen finalized (auto-lock timeout, clipboard timing, theme tokens)
 - **Exit criteria:** full backup → wipe → restore cycle verified with no data loss.
 
 ---
 
-## 9. Agent Delegation Protocol
+## 10. Agent Delegation Protocol
 
 Any AI coding agent operating on this repository must self-assign to one of the roles below and stay within its boundary. Cross-boundary changes require a note in the PR description.
 
 - `@Security-Agent` — owns `src-core/auth/`, key derivation, session lifecycle, backup encryption. No UI work.
-- `@Database-Agent` — owns `src-core/db/`, migrations, repositories, indexing, query performance. Schema changes must update Section 6 of this file in the same PR.
+- `@Database-Agent` — owns `src-core/db/`, migrations, repositories, indexing, query performance. Schema changes must update Section 7 of this file in the same PR.
 - `@Frontend-Agent` — owns `src/components/`, `src/state/`, Tailwind theme tokens, micro-interactions. Never touches raw SQLCipher connections or key material — IPC client only.
 - `@QA-Agent` — owns test strategy, edge-case coverage (empty vault, max-length passwords, concurrent lock during write, corrupted backup import), and a security checklist per phase before sign-off.
 
@@ -311,10 +401,10 @@ Delegated instructions should be issued in the form:
 
 ---
 
-## 10. Definition of Done (applies to every phase)
+## 11. Definition of Done (applies to every phase)
 
 1. No plaintext secret (password, master key, derived key) appears in logs, error messages, or crash reports.
 2. All new sensitive-data mutations produce a corresponding `activity_logs` row.
 3. No new runtime network call is introduced (verify via a network-monitor smoke test).
 4. TypeScript strict mode passes with zero `any` on any file touching credential or key data.
-5. This `PLAN.md` is updated in the same PR if architecture, schema, or phase scope changes.
+5. This `plan.md` is updated in the same PR if architecture, schema, or phase scope changes.
