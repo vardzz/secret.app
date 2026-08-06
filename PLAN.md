@@ -1,4 +1,4 @@
-# 🔐 SECRET — Master Project Plan (PLAN.md)
+# 🔐 SECRET — Master Project Plan (plan.md)
 
 **Single-User, Offline-First, Encrypted Desktop Workspace**
 
@@ -537,15 +537,19 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 
 ## 13. Agent Delegation Protocol
 
-Any AI coding agent operating on this repository must self-assign to one of the roles below and stay within its boundary. Cross-boundary changes require a note in the PR description.
+Any AI coding agent operating on this repository must self-assign to one of the roles defined in `AGENTS.md` and stay within its boundary. `AGENTS.md` is authoritative for persona detail, non-negotiables, and instinctive review checklists per role; this section is the quick map of ownership.
 
-- `@Security-Agent` — owns `src-core/auth/`, key derivation, session lifecycle, backup encryption, all of §9. No UI work.
-- `@Database-Agent` — owns `src-core/db/`, migrations (including §10.1 snapshot behavior), repositories, indexing, query performance, all of §8. Schema changes must update Section 8 of this file in the same PR.
-- `@Frontend-Agent` — owns `src/components/`, `src/state/`, Tailwind theme tokens, micro-interactions, note sanitization/sandboxing (§9.7). Never touches raw SQLCipher connections or key material — IPC client only.
-- `@QA-Agent` — owns test strategy, edge-case coverage (empty vault, max-length passwords, concurrent lock during write, corrupted backup import, malicious CSV headers, restart-during-lockout), and a security checklist per phase before sign-off.
+- `@UIUX-Agent` — design system (§5), information architecture, interaction patterns. No implementation code.
+- `@Frontend-Agent` — `src/components/`, `src/state/`, `src/lib/`, Tailwind implementation, IPC client. Never touches raw SQLCipher connections or key material — IPC client only.
+- `@Backend-Agent` — `src-core/db/`, `src-core/ipc/`, `src-core/import/`, migrations, repositories, indexing, all of §8. Schema changes must update Section 8 of this file in the same PR, and migrations follow the snapshot-first rule in §10.1.
+- `@Security-Agent` — `src-core/auth/`, `src-core/backup/`, key derivation, session lifecycle, backup encryption, all of §9. No UI work, and sole reviewer on any change touching key material.
+- `@DevOps-Agent` — dependency management, CI/audit config, build scripts, release packaging (deferred per §11.3), backup/snapshot infrastructure.
+- `@QA-Agent` — test strategy, edge-case coverage (empty vault, max-length passwords, concurrent lock during write, corrupted backup import, malicious CSV headers, restart-during-lockout), and phase-exit sign-off before a phase in §12 is called complete.
 
 Delegated instructions should be issued in the form:
 `[Delegate to @AgentName]: <specific task, boundary, and exit criteria>`
+
+Cross-boundary work uses the handoff format defined in `AGENTS.md` §8.
 
 ---
 
@@ -558,4 +562,4 @@ Delegated instructions should be issued in the form:
 5. All new queries use parameterized statements; any new dynamic-identifier code path is validated against §9.8.
 6. Any new failure/comparison path involving key material or password hashes uses constant-time comparison (§9.1).
 7. Any new destructive-adjacent operation (migration, rekey, restore, bulk import) takes an automatic snapshot first (§10.1).
-8. This `PLAN.md` is updated in the same PR if architecture, schema, threat model, or phase scope changes.
+8. This `plan.md` is updated in the same PR if architecture, schema, threat model, or phase scope changes.
