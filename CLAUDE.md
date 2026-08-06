@@ -1,7 +1,7 @@
 # CLAUDE.md — Operating Instructions for AI Agents Working on "Secret"
 
 > **Read this file in full before touching any code, in every session, before every task.**
-> This file is the operating contract. `PLAN.md` is the architecture contract. If the two ever conflict, stop and flag it — do not guess.
+> This file is the operating contract. `plan.md` is the architecture contract. If the two ever conflict, stop and flag it — do not guess.
 
 ---
 
@@ -45,7 +45,7 @@ If a task conflicts with any rule above, do not silently comply and do not silen
 ## 3. Workflow Protocol (every task, in order)
 
 1. **Restate the task** in your own words in 1–3 sentences before starting, including which module/file(s) it touches and which agent boundary (§5) it falls under.
-2. **Check `plan.md`** for the relevant module/schema section. If the task requires a schema change, update Section 6 of `plan.md` in the _same_ change — never let code and plan.md drift.
+2. **Check `plan.md`** for the relevant module/schema section. If the task requires a schema change, update Section 7 of `plan.md` in the _same_ change — never let code and plan.md drift.
 3. **Check existing patterns** in the codebase before introducing a new one (e.g. don't hand-roll a new IPC pattern if one already exists).
 4. **Implement** within your agent boundary (§5). If the task requires crossing a boundary (e.g. a Frontend task needs a new IPC command), implement the core-side command as a small, explicitly-labeled sub-task and say so.
 5. **Self-check against §2 and §6** before declaring done.
@@ -57,7 +57,7 @@ Do not mark a task complete without walking through step 6.
 
 ## 4. Phase Discipline
 
-Work proceeds in the five phases defined in `plan.md` §8:
+Work proceeds in the five phases defined in `plan.md` §9:
 
 | Phase | Focus                                  |
 | ----- | -------------------------------------- |
@@ -67,7 +67,7 @@ Work proceeds in the five phases defined in `plan.md` §8:
 | 4     | Finance, Data Workspace & Activity Log |
 | 5     | UI Polish & Backup/Export Engine       |
 
-- Do not start work belonging to a later phase until the current phase's exit criteria (stated in `plan.md` §8) are met, unless explicitly instructed otherwise.
+- Do not start work belonging to a later phase until the current phase's exit criteria (stated in `plan.md` §9) are met, unless explicitly instructed otherwise.
 - If a task prompt asks for something from a later phase out of order, flag it, then proceed only if the person confirms.
 - When a phase's exit criteria are satisfied, state clearly that the phase is complete and name the next phase.
 
@@ -78,7 +78,7 @@ Work proceeds in the five phases defined in `plan.md` §8:
 Every task belongs to exactly one of these roles. Identify which one you're operating as before writing code.
 
 - **`@Security-Agent`** — `src-core/auth/`, key derivation, session lifecycle, backup encryption. Never touches UI.
-- **`@Database-Agent`** — `src-core/db/`, migrations, repositories, indexing. Any schema change requires updating `plan.md` §6 in the same change.
+- **`@Database-Agent`** — `src-core/db/`, migrations, repositories, indexing. Any schema change requires updating `plan.md` §7 in the same change.
 - **`@Frontend-Agent`** — `src/components/`, `src/state/`, styling, micro-interactions. Never accesses SQLCipher directly or handles raw key material — IPC client only.
 - **`@QA-Agent`** — test strategy, edge cases (empty vault, max-length passwords, lock during write, corrupted backup import), security checklist sign-off per phase.
 
@@ -104,7 +104,7 @@ If a task doesn't cleanly fit one role, say so and propose which role should own
 - **Commits:** one logical change per commit; message states which module and which phase.
 - **Comments referencing clean-code rules:** if `AGENTS.md` defines numbered rules (e.g. Rule 4, 11, 15), cite the rule number in the commit or PR description when a change specifically enforces one.
 - **No dead code, no commented-out blocks left behind** — remove or don't commit.
-- **UI defaults to dark mode** per `plan.md` §0; do not introduce light-mode-only components.
+- **UI is restricted to the two-color obsidian/bone system** per `plan.md` §4; never introduce a third color or a light-mode variant. No component ships a raw hex value — always reference the `--color-obsidian` / `--color-bone` tokens.
 
 ---
 
@@ -122,7 +122,7 @@ If a task doesn't cleanly fit one role, say so and propose which role should own
 - Multi-user accounts or sharing features
 - Telemetry, crash reporting to a remote service, or usage analytics
 - Auto-update mechanisms that phone home
-- Light mode / theming beyond the dark "minimalist luxury" tokens in `plan.md`
+- Any third color, or a light-mode variant, beyond the obsidian/bone system in `plan.md` §4
 
 ---
 
