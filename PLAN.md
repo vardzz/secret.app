@@ -1,4 +1,4 @@
-# 🔐 SECRET — Master Project Plan (plan.md)
+# 🔐 SECRET — Master Project Plan (PLAN.md)
 
 **Single-User, Offline-First, Encrypted Desktop Workspace**
 
@@ -142,7 +142,7 @@ secret/
 │   │   └── sanitize.ts        # Markdown/HTML sanitization for note preview
 │   ├── state/                 # Session/auth state, lock state
 │   └── styles/                # Tailwind config wired to §5 obsidian/bone tokens
-├── plan.md                    # ← this file
+├── PLAN.md                    # ← this file
 └── README.md
 ```
 
@@ -562,4 +562,4 @@ Cross-boundary work uses the handoff format defined in `AGENTS.md` §8.
 5. All new queries use parameterized statements; any new dynamic-identifier code path is validated against §9.8.
 6. Any new failure/comparison path involving key material or password hashes uses constant-time comparison (§9.1).
 7. Any new destructive-adjacent operation (migration, rekey, restore, bulk import) takes an automatic snapshot first (§10.1).
-8. This `plan.md` is updated in the same PR if architecture, schema, threat model, or phase scope changes.
+8. This `PLAN.md` is updated in the same PR if architecture, schema, threat model, or phase scope changes.
