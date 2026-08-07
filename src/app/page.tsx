@@ -1,30 +1,58 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 
-export default function Home() {
-  const [pingResult, setPingResult] = useState<string>('');
+import React, { useEffect, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { AuthProvider, useAuth } from '../state/auth';
+import { SetupScreen } from '../components/auth/SetupScreen';
+import { UnlockScreen } from '../components/auth/UnlockScreen';
+
+function AppContent() {
+  const { isUnlocked } = useAuth();
+  const [needsSetup, setNeedsSetup] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Only run if we are in the Tauri environment
     if (window.__TAURI_INTERNALS__) {
-      invoke('ping')
-        .then((res) => setPingResult(res as string))
-        .catch((err) => console.error('Ping failed:', err));
+      invoke<boolean>('needs_setup')
+        .then((res) => setNeedsSetup(res))
+        .catch((err) => console.error(err));
     } else {
-      setPingResult('Not running in Tauri');
+      setNeedsSetup(true); // default to true if not in Tauri
     }
   }, []);
 
+  if (needsSetup === null) {
+    return <div className="min-h-screen bg-[color:var(--color-obsidian)]" />;
+  }
+
+  if (needsSetup && !isUnlocked) {
+    return <SetupScreen />;
+  }
+
+  if (!isUnlocked) {
+    return <UnlockScreen />;
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm flex flex-col gap-4">
-        <h1 className="text-4xl text-[color:var(--text-primary)]">Secret Vault</h1>
-        <p className="text-[color:var(--text-secondary)]">Phase 0 Scaffolding Complete</p>
-        <div className="p-4 border border-[color:var(--border-default)] rounded bg-[color:var(--surface-raised)]">
-          IPC Ping Result: {pingResult || 'Loading...'}
-        </div>
-      </div>
-    </main>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[color:var(--color-obsidian)] text-[color:var(--color-text-primary)]">
+      <h1 className="text-4xl mb-4 font-bold">Secret Vault</h1>
+      <p className="text-[color:var(--color-text-secondary)]">Vault is Unlocked!</p>
+      <button 
+        className="mt-6 px-4 py-2 bg-[color:var(--color-surface-raised)] border border-[color:var(--color-border-subtle)] rounded hover:bg-[color:var(--color-surface-raised-hover)]"
+        onClick={async () => {
+          await invoke('lock');
+          window.location.reload();
+        }}
+      >
+        Lock Vault
+      </button>
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
