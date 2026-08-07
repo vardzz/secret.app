@@ -23,7 +23,7 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.11.3", features = [] }
 tauri-plugin-log = "2"
-rusqlite = { version = "0.31", features = ["bundled-sqlcipher-vendored-openssl"] }
+rusqlite = { version = "0.31", features = ["bundled-sqlcipher"] }
 argon2 = "0.5"
 zeroize = { version = "=1.8.1", features = ["zeroize_derive"] }
 subtle = "2.5"
