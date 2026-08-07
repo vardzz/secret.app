@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  --color-obsidian: #0f0e0d;
+  --color-bone: #f4ede4;
+
+  /* Obsidian surface layers — for depth without a new hue */
+  --surface-base: var(--color-obsidian);
+  --surface-raised: rgba(244, 237, 228, 0.03); /* card on top of base */
+  --surface-raised-hover: rgba(244, 237, 228, 0.06);
+  --border-subtle: rgba(244, 237, 228, 0.08);
+  --border-default: rgba(244, 237, 228, 0.14);
+
+  /* Bone text/foreground layers */
+  --text-primary: var(--color-bone);
+  --text-secondary: rgba(244, 237, 228, 0.64);
+  --text-tertiary: rgba(244, 237, 228, 0.38);
+  --text-disabled: rgba(244, 237, 228, 0.2);
+
+  /* Interactive */
+  --accent-solid: var(--color-bone);
+  --accent-on-accent: var(--color-obsidian);
+}
+
+@theme inline {
+  --color-obsidian: var(--color-obsidian);
+  --color-bone: var(--color-bone);
+  
+  --color-surface-base: var(--surface-base);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-raised-hover: var(--surface-raised-hover);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+  
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-on-accent: var(--accent-on-accent);
+}
+
+body {
+  background-color: var(--surface-base);
+  color: var(--text-primary);
+  /* The app uses a subtle gradient for large surfaces per PLAN.md 5.3 */
+  background-image: linear-gradient(135deg, #0F0E0D 0%, #1A1815 100%);
+  min-height: 100vh;
+}
