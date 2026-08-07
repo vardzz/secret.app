@@ -1,5 +1,4 @@
-# 🔐 SECRET — Master Project Plan (PLAN.md)
-
+# 🔐 SECRET — Master Project Plan (plan.md)
 **Single-User, Offline-First, Encrypted Desktop Workspace**
 
 > This document is the authoritative source of truth for any AI coding agent, human developer, or reviewer working on this project. Every module, schema, and phase below is binding. Do not deviate from architectural decisions in this document without explicitly flagging the change and updating this file.
@@ -8,16 +7,15 @@
 
 ## 0. Project Identity
 
-| Field                 | Value                                                                                           |
-| --------------------- | ----------------------------------------------------------------------------------------------- |
-| **Project Name**      | Secret                                                                                          |
-| **Type**              | Desktop Application                                                                             |
-| **Deployment Model**  | 100% Offline, Local-First, Single-User                                                          |
-| **Security Posture**  | Zero-Knowledge, Zero Cloud Exposure                                                             |
+| Field | Value |
+|---|---|
+| **Project Name** | Secret |
+| **Type** | Desktop Application |
+| **Deployment Model** | 100% Offline, Local-First, Single-User |
+| **Security Posture** | Zero-Knowledge, Zero Cloud Exposure |
 | **Primary Objective** | A hardened personal vault + productivity workspace + financial ledger + local analytics station |
 
 **Non-negotiable constraints (apply to every phase, every agent, every PR):**
-
 1. No network calls of any kind outside of local IPC between the frontend and the Rust/Electron backend. No telemetry, no update-check pings, no font/CDN fetches at runtime.
 2. All persisted data lives inside a single SQLCipher-encrypted database file, opened with hardening pragmas defined in §9.2 — encryption-at-rest alone is not sufficient without them.
 3. Master key material exists in memory only, is zeroized on lock/timeout/exit, and is never logged, serialized, or written to disk in plaintext.
@@ -34,7 +32,7 @@ Secret is a hardened, single-user desktop application combining a zero-knowledge
 
 The product is architected as **one encrypted source of truth** with **six modules** sitting on top of it, plus two system-level utilities (Activity Log, Settings) and one hard security control (Lock).
 
-**Current phase of the project:** single-user, pre-launch. You (the developer) are also the only user. This document treats that as a real constraint, not a shortcut — see §2.3 for what changes before this ever goes to a second user.
+**Current phase of the project:** single-user, pre-launch, starting from Phase 0 (project scaffold, §12) — no code exists yet. You (the developer) are also the only user. This document treats that as a real constraint, not a shortcut — see §2.3 for what changes before this ever goes to a second user.
 
 ---
 
@@ -62,10 +60,10 @@ State this plainly to the user somewhere in-app (e.g. a "Security Model" panel i
 
 ### 2.3 Single-User Today, Not Necessarily Forever
 
-Because you are currently the only user, some things are safe to be _lenient_ about that would not be safe once this ships to other people:
+Because you are currently the only user, some things are safe to be *lenient* about that would not be safe once this ships to other people:
 
 - **Safe to defer right now:** code signing/notarization, crash-reporting opt-in flow, formal security audit, licensing/update-server design.
-- **Not safe to defer, even for an audience of one:** everything in §9 (crypto hardening), §10 (data integrity), and §11 (supply chain) — these protect _your_ real passwords and _your_ real financial data today, and retrofitting crypto/schema decisions after real data exists is far more painful than building them correctly from Phase 1.
+- **Not safe to defer, even for an audience of one:** everything in §9 (crypto hardening), §10 (data integrity), and §11 (supply chain) — these protect *your* real passwords and *your* real financial data today, and retrofitting crypto/schema decisions after real data exists is far more painful than building them correctly from Phase 1.
 - **Before any second user (including "just my partner" or a public release):** revisit §9.6 (password policy needs to be enforced, not just suggested), add code signing (§11.3), and formalize the backup story in §10.4 into an actual guided flow rather than a manual habit.
 
 ---
@@ -142,7 +140,7 @@ secret/
 │   │   └── sanitize.ts        # Markdown/HTML sanitization for note preview
 │   ├── state/                 # Session/auth state, lock state
 │   └── styles/                # Tailwind config wired to §5 obsidian/bone tokens
-├── PLAN.md                    # ← this file
+├── plan.md                    # ← this file
 └── README.md
 ```
 
@@ -150,17 +148,17 @@ secret/
 
 ## 4. Module Specification
 
-| #   | Module             | Purpose                          | Key Features                                                                                                                                                                           |
-| --- | ------------------ | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Dashboard**      | System overview / landing screen | Summary counters (credentials, notes, active tasks, monthly income), upcoming-task widget with priority indicators, recent income feed, DB health + backup-freshness indicator (§10.4) |
-| 2   | **My Vault**       | Zero-knowledge credential store  | Masked password field, provider-domain icon resolution, favorite toggle, copy-to-clipboard with 30s auto-clear, full CRUD                                                              |
-| 3   | **Notes**          | Markdown developer notepad       | Write/Preview dual mode (sandboxed + sanitized, §9.7), folder taxonomy, tag filtering, full-text search                                                                                |
-| 4   | **Tasks**          | Grouped task manager             | Columns: `To Do` / `In Progress` / `Done`; priority badges (`Low`/`Medium`/`High`); custom tags; due dates; inline status toggle                                                       |
-| 5   | **Income**         | Personal finance ledger          | Header stats (This Month, All-Time, Total Entries); category tags (Consulting, Freelance, Revenue, Bonus); tabular ledger with currency formatting                                     |
-| 6   | **Data Workspace** | Local analytics station          | Import CSV/JSON/SQL dumps into isolated local tables (identifiers sanitized, §9.8); high-performance sortable/filterable grid; anonymization utility for sensitive columns             |
-| 7   | **Activity Log**   | Immutable local audit trail      | Append-only log of sensitive actions (`Password Copied`, `Note Created`, `Failed Unlock Attempt`, `Backup Exported`, `Data Exported`) with exact timestamps                            |
-| 8   | **Settings**       | App configuration                | Master password change/rotation (§9.5), auto-lock timeout, theme tokens, encrypted `.enc` backup export/import, Security Model panel (§2.2)                                            |
-| 9   | **Lock**           | Hard security control            | Instantly zeroizes the session key, clears sensitive UI state, returns to unlock screen; also fires automatically on OS sleep/screen-lock (§9.3)                                       |
+| # | Module | Purpose | Key Features |
+|---|---|---|---|
+| 1 | **Dashboard** | System overview / landing screen | Summary counters (credentials, notes, active tasks, monthly income), upcoming-task widget with priority indicators, recent income feed, DB health + backup-freshness indicator (§10.4) |
+| 2 | **My Vault** | Zero-knowledge credential store | Masked password field, provider-domain icon resolution, favorite toggle, copy-to-clipboard with 30s auto-clear, full CRUD |
+| 3 | **Notes** | Markdown developer notepad | Write/Preview dual mode (sandboxed + sanitized, §9.7), folder taxonomy, tag filtering, full-text search |
+| 4 | **Tasks** | Grouped task manager | Columns: `To Do` / `In Progress` / `Done`; priority badges (`Low`/`Medium`/`High`); custom tags; due dates; inline status toggle |
+| 5 | **Income** | Personal finance ledger | Header stats (This Month, All-Time, Total Entries); category tags (Consulting, Freelance, Revenue, Bonus); tabular ledger with currency formatting |
+| 6 | **Data Workspace** | Local analytics station | Import CSV/JSON/SQL dumps into isolated local tables (identifiers sanitized, §9.8); high-performance sortable/filterable grid; anonymization utility for sensitive columns |
+| 7 | **Activity Log** | Immutable local audit trail | Append-only log of sensitive actions (`Password Copied`, `Note Created`, `Failed Unlock Attempt`, `Backup Exported`, `Data Exported`) with exact timestamps |
+| 8 | **Settings** | App configuration | Master password change/rotation (§9.5), auto-lock timeout, theme tokens, encrypted `.enc` backup export/import, Security Model panel (§2.2) |
+| 9 | **Lock** | Hard security control | Instantly zeroizes the session key, clears sensitive UI state, returns to unlock screen; also fires automatically on OS sleep/screen-lock (§9.3) |
 
 ---
 
@@ -174,23 +172,23 @@ Minimalist, premium, quiet-luxury. The interface should feel like a high-end har
 
 ### 5.2 Color System — Two Colors Only
 
-| Token                     | Hex       | Role                                                            |
-| ------------------------- | --------- | --------------------------------------------------------------- |
-| `--color-obsidian` (base) | `#0F0E0D` | Primary background, near-black surfaces, default UI chrome      |
-| `--color-bone` (accent)   | `#F4EDE4` | Primary text, primary buttons, active/focus states, key accents |
+| Token | Hex | Role |
+|---|---|---|
+| `--color-obsidian` (base) | `#0F0E0D` | Primary background, near-black surfaces, default UI chrome |
+| `--color-bone` (accent) | `#F4EDE4` | Primary text, primary buttons, active/focus states, key accents |
 
-**Hard rule: no third color is introduced.** All depth, hierarchy, and state are created through opacity/alpha variants and gradient blends of these two colors only — never a new hue (no blues for "info," no reds for "error" as a _color swap_; use bone-on-obsidian weight/opacity/iconography instead, per §5.5).
+**Hard rule: no third color is introduced.** All depth, hierarchy, and state are created through opacity/alpha variants and gradient blends of these two colors only — never a new hue (no blues for "info," no reds for "error" as a *color swap*; use bone-on-obsidian weight/opacity/iconography instead, per §5.5).
 
 **Derived tokens (opacity variants, not new colors):**
 
 ```css
 :root {
-  --color-obsidian: #0f0e0d;
-  --color-bone: #f4ede4;
+  --color-obsidian: #0F0E0D;
+  --color-bone: #F4EDE4;
 
   /* Obsidian surface layers — for depth without a new hue */
   --surface-base: var(--color-obsidian);
-  --surface-raised: rgba(244, 237, 228, 0.03); /* card on top of base */
+  --surface-raised: rgba(244, 237, 228, 0.03);   /* card on top of base */
   --surface-raised-hover: rgba(244, 237, 228, 0.06);
   --border-subtle: rgba(244, 237, 228, 0.08);
   --border-default: rgba(244, 237, 228, 0.14);
@@ -199,13 +197,11 @@ Minimalist, premium, quiet-luxury. The interface should feel like a high-end har
   --text-primary: var(--color-bone);
   --text-secondary: rgba(244, 237, 228, 0.64);
   --text-tertiary: rgba(244, 237, 228, 0.38);
-  --text-disabled: rgba(244, 237, 228, 0.2);
+  --text-disabled: rgba(244, 237, 228, 0.20);
 
   /* Interactive */
   --accent-solid: var(--color-bone);
-  --accent-on-accent: var(
-    --color-obsidian
-  ); /* text/icon color when sitting ON a bone-filled element */
+  --accent-on-accent: var(--color-obsidian);      /* text/icon color when sitting ON a bone-filled element */
 }
 ```
 
@@ -228,7 +224,7 @@ Since only obsidian and bone exist, status/priority/severity must be communicate
 
 - **Priority badges** (`Low`/`Medium`/`High`): differentiate via filled vs. outlined vs. bold-filled bone treatment, plus an icon (dot / half-fill / full-fill), not red/yellow/green.
 - **Task status columns:** differentiate via border weight and background opacity step (`To Do` = subtle outline only, `In Progress` = `--surface-raised`, `Done` = `--surface-raised` + reduced text opacity to imply completion/fade).
-- **Errors / failed unlock:** communicated via icon (e.g. an alert glyph), motion (a subtle shake), and bone-on-obsidian at full opacity with bold weight — not a red state. If a task genuinely requires a distinct error color, flag it for explicit sign-off before adding a third hue; the default expectation is _no third color, ever_.
+- **Errors / failed unlock:** communicated via icon (e.g. an alert glyph), motion (a subtle shake), and bone-on-obsidian at full opacity with bold weight — not a red state. If a task genuinely requires a distinct error color, flag it for explicit sign-off before adding a third hue; the default expectation is *no third color, ever*.
 - **Favorites / active states:** solid bone fill with obsidian icon/text on top (`--accent-on-accent`), reserved for the single most important action or item on a given screen.
 
 ### 5.6 Component Treatment
@@ -257,14 +253,12 @@ Since only obsidian and bone exist, status/priority/severity must be communicate
 ## 6. Credential Creation & Smart Password Generator
 
 ### 6.1 Credential Modal Fields
-
 - **Account Name** — friendly label (e.g. `GitHub Main`)
 - **Provider URL** — domain used to resolve a brand icon locally (bundled icon set + simple domain matcher; no live favicon fetching, since that would violate the offline constraint)
 - **Username / Email** — plain text, single-click copy
 - **Password** — obfuscated input, visibility toggle, fast copy, "Generate" button wired to the Smart Generator
 
 ### 6.2 Smart Password Generator
-
 - **Length Slider:** 8–64 characters, default 18
 - **Rule toggles:** Uppercase (`A-Z`), Lowercase (`a-z`), Digits (`0-9`), Symbols (`!@#$%^&*()_+-=[]{}|;:,.<>?`), Exclude Ambiguous (`1 l I 0 O`)
 - **Entropy display:** `E = L × log2(N)` computed live, with a labeled strength meter (e.g. Weak / Fair / Strong / Excellent)
@@ -275,15 +269,15 @@ Since only obsidian and bone exist, status/priority/severity must be communicate
 
 ## 7. Technical Stack
 
-| Layer                | Choice                                                                                       | Rationale                                                                                                    |
-| -------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Desktop Shell        | **Tauri (Rust)** — preferred over Electron                                                   | ~15MB footprint, native Rust memory safety for the key-holding core process                                  |
-| Frontend             | **React / Next.js + TypeScript**                                                             | Strict typing across IPC boundary reduces class of runtime bugs touching sensitive data                      |
-| Styling              | **Tailwind CSS**, configured with the `--color-obsidian` / `--color-bone` token system in §5 | Fast, consistent enforcement of the two-color minimalist-premium system — no ad-hoc hex values in components |
-| Database             | **SQLCipher (SQLite + AES-256)**, opened with hardening pragmas (§9.2)                       | Full-database encryption at rest, battle-tested — but only as strong as the pragmas around it                |
-| Key Derivation       | **Argon2id**                                                                                 | Memory-hard, GPU/ASIC brute-force resistant                                                                  |
-| Markdown Rendering   | Sanitized renderer (e.g. `markdown-it` + `DOMPurify`, or a Rust equivalent)                  | Prevents stored-content XSS in the Notes preview (§9.7)                                                      |
-| Animation (optional) | **Framer Motion**                                                                            | Micro-interactions on unlock, card transitions                                                               |
+| Layer | Choice | Rationale |
+|---|---|---|
+| Desktop Shell | **Tauri (Rust)** — preferred over Electron | ~15MB footprint, native Rust memory safety for the key-holding core process |
+| Frontend | **React / Next.js + TypeScript** | Strict typing across IPC boundary reduces class of runtime bugs touching sensitive data |
+| Styling | **Tailwind CSS**, configured with the `--color-obsidian` / `--color-bone` token system in §5 | Fast, consistent enforcement of the two-color minimalist-premium system — no ad-hoc hex values in components |
+| Database | **SQLCipher (SQLite + AES-256)**, opened with hardening pragmas (§9.2) | Full-database encryption at rest, battle-tested — but only as strong as the pragmas around it |
+| Key Derivation | **Argon2id** | Memory-hard, GPU/ASIC brute-force resistant |
+| Markdown Rendering | Sanitized renderer (e.g. `markdown-it` + `DOMPurify`, or a Rust equivalent) | Prevents stored-content XSS in the Notes preview (§9.7) |
+| Animation (optional) | **Framer Motion** | Micro-interactions on unlock, card transitions |
 
 ---
 
@@ -389,50 +383,41 @@ CREATE TABLE app_settings (
 ## 9. Security Architecture Detail
 
 ### 9.1 Key Derivation
-
 - Argon2id, tuned for ≥ 500ms derivation time on target hardware (memory cost ≥ 64MB, iterations tuned accordingly). Salt stored alongside the encrypted DB header, never reused.
 - The master password input buffer itself (not just the derived key) must be handled carefully: avoid unnecessary `String` copies in Rust, prefer a type that can be zeroized (e.g. the `zeroize` crate), and never let it hit a debug log or panic message.
 - Comparisons involving derived key material or password hashes must be **constant-time** (e.g. `subtle::ConstantTimeEq` in Rust) — never a plain `==`, which can leak timing information about how many leading bytes matched.
 
 ### 9.2 SQLite/SQLCipher Hardening Pragmas
-
 Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal behavior can otherwise leak plaintext to disk even inside an encrypted-DB setup. On every connection open, the core process must set:
-
 - `PRAGMA cipher_page_size`, `kdf_iter`, etc. per SQLCipher's own key-derivation settings (separate from the app's Argon2id layer — SQLCipher does its own internal KDF on the key you hand it).
 - `PRAGMA secure_delete = ON;` — overwrites deleted content with zeros instead of just unlinking it, closing the forensic-recovery gap noted in §2.1.
 - `PRAGMA temp_store = MEMORY;` — prevents SQLite from spilling temporary tables/sort data to an unencrypted temp file on disk.
 - Journal mode: if using WAL for performance, be aware the `-wal` and `-shm` files are separate from the main DB file — verify your SQLCipher build encrypts these too, or fall back to `DELETE` journal mode, which keeps everything inside the single encrypted file at the cost of some write concurrency (irrelevant for a single-user app).
 
 ### 9.3 Session & Lock Behavior
-
 - Auto-lock fires on: idle timeout (`auto_lock_minutes`), **and** on OS-level sleep/suspend/screen-lock events, not idle timeout alone — a user who locks their OS screen but not the app should still get a locked vault.
 - RAM hardening: derived key stored in a locked/pinned memory region where the platform allows it (`mlock` equivalent); zeroized byte-by-byte on `Lock`, idle timeout, or app exit — not just dereferenced.
 - Password input fields disable OS/browser-level autofill, autocomplete, and predictive-text suggestion (`autocomplete="off"`, platform-specific flags in Tauri/Electron) so the OS doesn't cache the master password outside the app's control.
 
 ### 9.4 Failed Unlock Attempts
-
 - Logged to `activity_logs` on every failure.
 - The failure counter (`failed_unlock_count`) and any active `lockout_until` are **persisted in `app_settings`, not just held in memory** — otherwise restarting the app resets the counter and defeats the backoff entirely.
 - Exponential backoff: e.g. no delay for attempts 1–3, then delay doubling from a small base (2s, 4s, 8s...) up to a capped maximum, rather than an unbounded lockout — since there is no account-recovery path for a single local vault, a full lockout would mean **permanent data loss**, which is worse than a slow brute-force deterrent. Do not implement a "wipe after N failures" feature in v1 given that risk, unless the user explicitly opts in with a clear warning.
 
 ### 9.5 Master Password Rotation
-
 - Changing the master password triggers an SQLCipher `PRAGMA rekey` (or equivalent full re-encrypt), re-derives the Argon2id key, and re-encrypts any `.enc` backups created under the old key are **not** automatically migrated — surface this clearly ("your existing backups were made with your old password; create a fresh backup now").
 - A rekey operation is treated as a "destructive-adjacent operation" per §0 constraint 7: take an automatic snapshot (§10.1) immediately before starting.
 
 ### 9.6 Master Password Strength Policy
-
 - The whole system's security is bounded by this one secret. Enforce (not just suggest) a minimum bar at setup and at rotation: minimum length (e.g. 12+ characters) plus a real strength estimator (e.g. zxcvbn-style scoring, not just a character-class checklist) rather than a fake "must contain 1 number and 1 symbol" rule that produces predictable patterns like `Password1!`.
 - Show the same entropy/strength meter used for generated credential passwords (§6.2) on the master password field too, for consistency.
 
 ### 9.7 Markdown / Note Content Sanitization
-
 - Treat all note content as untrusted input when rendering the Preview mode, even though it's self-authored — pasted content, imported files, or a future "shared notes" feature could all introduce hostile Markdown/HTML.
 - Sanitize rendered HTML output (e.g. `DOMPurify` or equivalent) before injecting into the DOM; strip `<script>`, inline event handlers, and `javascript:` URIs.
-- The preview surface should have **zero** access to the IPC bridge — render it in a context (sandboxed iframe or equivalent) that cannot call back into `src-core` even if a sanitization bypass is later found. Defense in depth: sanitize _and_ sandbox, not one or the other.
+- The preview surface should have **zero** access to the IPC bridge — render it in a context (sandboxed iframe or equivalent) that cannot call back into `src-core` even if a sanitization bypass is later found. Defense in depth: sanitize *and* sandbox, not one or the other.
 
 ### 9.8 SQL Injection & Dynamic Identifier Safety (Data Workspace)
-
 - All queries anywhere in the app use parameterized statements / prepared statements — never string-concatenated SQL, without exception.
 - The Data Workspace's CSV/JSON import feature is the highest-risk surface in the schema: it creates new tables and column names **derived from user-supplied file headers**. Column/table names cannot be parameterized the way values can, so:
   - Generate an internal, sanitized table name (e.g. `import_<uuid>`) rather than using the source filename directly.
@@ -446,22 +431,18 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 > This is the section that matters most for a solo, fully-offline user: there is no cloud fallback, so the local copy is the only copy unless you personally back it up. Data loss here is unrecoverable.
 
 ### 10.1 Migration Safety
-
 - Every schema migration is versioned against `app_settings.schema_version`.
 - Before running any migration, automatically copy the current encrypted DB file to a timestamped snapshot in a local `backups/pre-migration/` directory. If the migration fails partway, the app can detect the version mismatch on next launch and offer to restore the snapshot rather than opening a half-migrated (and potentially corrupted) database.
 - Migrations run inside a transaction where the underlying engine supports it, so a failure rolls back cleanly instead of leaving partial DDL applied.
 
 ### 10.2 Write Durability
-
 - Prefer `DELETE` journal mode over `WAL` unless a concrete performance need arises (see §9.2) — it keeps the "what does a crash mid-write leave behind" story simpler for a single encrypted file.
 - On app exit and before `Lock`, ensure any pending writes are flushed and the connection is closed cleanly rather than killed mid-transaction.
 
 ### 10.3 Corruption Detection
-
 - On app launch, run SQLite's built-in integrity check (`PRAGMA integrity_check` post-decryption) as part of the DB-health indicator shown on the Dashboard (already specified in §4) — surface a clear warning and point to the most recent local backup if it fails, rather than silently proceeding.
 
 ### 10.4 Backup Policy (the actual biggest risk for this project)
-
 - The Dashboard's "backup-freshness indicator" (§4) should visibly nag if `last_backup_at` is older than a sane threshold (e.g. 7 days) — don't let this be a passive stat nobody looks at.
 - `.enc` exports are the disaster-recovery path for **device loss, drive failure, or corruption** — not just a "nice to have" feature. Recommend the user store at least one backup off the primary device (external drive, encrypted USB) precisely because there is no cloud copy by design.
 - Backup import must fully verify (checksum + successful decryption + integrity check) into a temporary location before it's allowed to replace or merge into the live DB — never overwrite the live vault with an unverified file.
@@ -471,19 +452,16 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 ## 11. Supply Chain & Build Security
 
 ### 11.1 Dependency Hygiene
-
 - Lockfiles (`package-lock.json` / `Cargo.lock`) are committed and treated as the source of truth for exact versions — no floating version ranges resolved fresh at build time.
 - Run `npm audit` / `cargo audit` (or equivalent) as part of the build/CI process; a new dependency touching `src-core/auth/`, `src-core/db/`, or anything handling key material gets manual review before being added, not just an automated pass.
 - Minimize dependency count in the core process specifically — every crate in `src-core` is inside the trust boundary that holds your master key; the frontend can afford to be less paranoid since it never sees that key.
 - Be wary of postinstall scripts from new/unfamiliar packages; prefer well-established, widely-audited crates/packages for anything crypto-adjacent (Argon2id, SQLCipher bindings, CSPRNG) rather than rolling or picking obscure implementations.
 
 ### 11.2 Build Hygiene
-
 - Production builds strip debug logging that could contain sensitive data (§0 constraint 3 extends to build config, not just runtime code — a debug build that logs decrypted rows "for testing" must never be the build that gets used with real data).
 - No dev-only bypass flags (e.g. a "skip master password in dev mode" flag) should be able to ship in a release build — gate them at compile time, not runtime, so they can't be flipped on accidentally.
 
 ### 11.3 Before This Goes Beyond You (deferred, but tracked)
-
 - Code signing / notarization (Windows Authenticode, macOS notarization) so the OS doesn't flag the binary and so a second user has some integrity guarantee about what they're installing.
 - A documented, reproducible build process so "the binary matches this source" is verifiable.
 - These are explicitly **not** required for your own single-user use today (§2.3) but should not be forgotten when scoping a public release.
@@ -492,8 +470,19 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 
 ## 12. Phased Implementation Roadmap
 
-### Phase 1 — Core Auth & Encryption Engine
+### Phase 0 — Environment & Project Scaffold
 
+> Not a feature phase — this is the prerequisite that makes Phase 1 possible at all. Nothing in Phase 1's exit criteria can be attempted until the project actually builds and launches.
+
+- Initialize the repository with the directory structure defined in §3.3 (`src-core/`, `src/`, module subfolders) — empty stubs are fine, but the shape must exist.
+- Initialize the Tauri + Rust core project; add the crates Phase 1 will need (SQLCipher binding, Argon2id implementation, `zeroize`, `subtle`) so the dependency tree resolves before any auth logic is written.
+- Initialize the React/Next.js + TypeScript frontend; configure Tailwind with the `--color-obsidian` / `--color-bone` token system from §5.2 from the start, not retrofitted later.
+- Confirm the Tauri window launches end-to-end (empty shell, no auth yet) — frontend and core process talking over IPC with a trivial "ping" command is a good smoke test.
+- Commit lockfiles (`package-lock.json`, `Cargo.lock`) per §11.1, and add a `.gitignore` covering build artifacts, local DB files, and any `backups/` directory before either can accidentally be committed.
+- **Owners:** `@Backend-Agent` (Rust/Tauri init, crate selection) and `@Frontend-Agent` (React/Tailwind init) jointly; `@DevOps-Agent` owns the lockfile/`.gitignore`/build-config baseline.
+- **Exit criteria:** `cargo build` and the frontend build both succeed from a clean clone; the Tauri app window opens; a trivial round-trip IPC call works; lockfiles and `.gitignore` are committed. No auth, no database, no UI beyond an empty shell — that's Phase 1.
+
+### Phase 1 — Core Auth & Encryption Engine
 - Master password setup/onboarding flow, with strength enforcement (§9.6)
 - Argon2id key derivation + SQLCipher open/close, with hardening pragmas applied on every connection (§9.2)
 - Session key manager with auto-lock timer **and** OS suspend/lock hook (§9.3)
@@ -502,7 +491,6 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 - **Exit criteria:** DB opens/decrypts only with correct password; key is unrecoverable from a memory dump after lock; restarting the app does not reset the failed-attempt counter.
 
 ### Phase 2 — Vault & Smart Generator
-
 - Credential CRUD + modal
 - Provider icon resolution (bundled/local matcher)
 - Smart Password Generator with entropy meter and rejection-sampled CSPRNG (§6.2)
@@ -510,14 +498,12 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 - **Exit criteria:** full vault CRUD works end-to-end against the encrypted DB; generator never uses a non-CSPRNG source and shows no modulo bias under statistical spot-check.
 
 ### Phase 3 — Notes & Tasks Modules
-
 - Markdown editor (Write/Preview toggle) with sanitized, sandboxed preview rendering (§9.7)
 - Notes folder taxonomy, search
 - Grouped task board (`To Do`/`In Progress`/`Done`), priority badges, due dates
 - **Exit criteria:** both modules persist correctly and appear in Dashboard summary counts; a Markdown note containing a script/event-handler payload renders inert in Preview.
 
 ### Phase 4 — Finance, Data Workspace & Activity Log
-
 - Income ledger CRUD + monthly/all-time aggregation
 - CSV/JSON/SQL import into isolated local tables with sanitized identifiers (§9.8), sortable/filterable grid, anonymization utility
 - Activity Log wired as append-only listener across all prior modules
@@ -525,7 +511,6 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 - **Exit criteria:** every sensitive action from Phases 1–3 now produces a log entry retroactively verified by QA; a crafted CSV with a malicious header/filename cannot alter or inject into unrelated tables.
 
 ### Phase 5 — UI Polish, Backup Engine & Reliability Hardening
-
 - Full application of the §5 Design System (obsidian/bone tokens, gradients, typography, motion) across every screen; audit for any stray third color or ad-hoc hex value
 - `.enc` encrypted backup export/import engine with verify-before-restore (§10.4)
 - Migration snapshot system wired to every future schema change (§10.1)
@@ -562,4 +547,4 @@ Cross-boundary work uses the handoff format defined in `AGENTS.md` §8.
 5. All new queries use parameterized statements; any new dynamic-identifier code path is validated against §9.8.
 6. Any new failure/comparison path involving key material or password hashes uses constant-time comparison (§9.1).
 7. Any new destructive-adjacent operation (migration, rekey, restore, bulk import) takes an automatic snapshot first (§10.1).
-8. This `PLAN.md` is updated in the same PR if architecture, schema, threat model, or phase scope changes.
+8. This `plan.md` is updated in the same PR if architecture, schema, threat model, or phase scope changes.
