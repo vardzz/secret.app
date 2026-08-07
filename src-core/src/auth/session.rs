@@ -1,9 +1,9 @@
-use zeroize::{Zeroize, ZeroizeOnDrop};
+use zeroize::Zeroize;
 use std::ffi::c_void;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[derive(Zeroize)]
 pub struct SessionKey {
     pub key: [u8; 32],
 }
@@ -53,8 +53,7 @@ impl SessionKey {
 
 impl Drop for SessionKey {
     fn drop(&mut self) {
-        // Zeroize is handled automatically by ZeroizeOnDrop.
-        // We just need to unpin the memory.
+        self.zeroize();
         self.unpin_memory();
     }
 }

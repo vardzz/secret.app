@@ -5,7 +5,6 @@ use crate::auth::kdf;
 use crate::auth::state_store::AuthStateStore;
 use crate::db::connection;
 use std::path::PathBuf;
-use zeroize::Zeroize;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct AppState {
@@ -53,7 +52,7 @@ pub fn unlock(password: String, state: State<'_, AppState>) -> Result<(), String
     let session_key = SessionKey::new(key);
     
     match connection::open_database(state.db_path.to_str().unwrap(), &session_key) {
-        Ok(conn) => {
+        Ok(_conn) => {
             session.unlock(session_key);
             auth_store.failed_unlock_count = 0;
             auth_store.lockout_until = 0;
