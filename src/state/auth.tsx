@@ -15,7 +15,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isUnlocked, setIsUnlocked] = useState(false);
 
   const checkAuthState = async () => {
-    if (window.__TAURI_INTERNALS__) {
+    if ((window as any).__TAURI_INTERNALS__) {
       try {
         const state = await invoke<boolean>('get_auth_state');
         setIsUnlocked(state);
