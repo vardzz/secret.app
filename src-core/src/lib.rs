@@ -10,10 +10,12 @@ use std::sync::Mutex;
 use std::path::PathBuf;
 use auth::session::SessionState;
 use ipc::auth_commands::{self, AppState};
+use ipc::vault_commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .plugin(tauri_plugin_clipboard_manager::init())
     .setup(|app| {
       use tauri::Manager;
       
@@ -44,6 +46,11 @@ pub fn run() {
         auth_commands::lock,
         auth_commands::get_auth_state,
         auth_commands::needs_setup,
+        vault_commands::create_credential,
+        vault_commands::get_credentials,
+        vault_commands::update_credential,
+        vault_commands::delete_credential,
+        vault_commands::copy_to_clipboard,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

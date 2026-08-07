@@ -6,7 +6,7 @@ authors = ["you"]
 license = ""
 repository = ""
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.89.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -25,9 +25,12 @@ tauri = { version = "2.11.3", features = [] }
 tauri-plugin-log = "2"
 rusqlite = { version = "0.31", features = ["sqlcipher"] }
 argon2 = "0.5"
-zeroize = { version = "1.8", features = ["zeroize_derive"] }
+zeroize = { version = "=1.8.1", features = ["zeroize_derive"] }
 subtle = "2.5"
 hex = "0.4"
+uuid = { version = "1.10", features = ["v4"] }
+tokio = { version = "1.40", features = ["time", "rt"] }
+tauri-plugin-clipboard-manager = "2"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.52", features = ["Win32_System_Memory", "Win32_Foundation"] }

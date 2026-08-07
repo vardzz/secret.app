@@ -1,8 +1,9 @@
 use rusqlite::{Connection, Result};
 use crate::auth::session::SessionKey;
+use crate::db::migrations;
 
 pub fn open_database(path: &str, key: &SessionKey) -> Result<Connection> {
-    let conn = Connection::open(path)?;
+    let mut conn = Connection::open(path)?;
 
     // Format the 32-byte key as a hex string for SQLCipher's raw key syntax.
     let hex_key = hex::encode(&key.key);
@@ -23,6 +24,9 @@ pub fn open_database(path: &str, key: &SessionKey) -> Result<Connection> {
     // Verify that the database can actually be decrypted by doing a quick integrity check or dummy read
     // A dummy read on sqlite_schema is enough to verify the key.
     conn.query_row("SELECT count(*) FROM sqlite_schema;", [], |_| Ok(()))?;
+    
+    // Run migrations (will snapshot if schema_version < 2)
+    migrations::run_migrations(&mut conn, path)?;
     
     Ok(conn)
 }
