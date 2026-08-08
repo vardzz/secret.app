@@ -113,7 +113,7 @@ flowchart TD
 
 ```
 secret/
-├── src-core/                  # Rust (Tauri) or Node main process (Electron)
+├── backend/                  # Rust (Tauri) or Node main process (Electron)
 │   ├── auth/
 │   │   ├── kdf.rs             # Argon2id derivation
 │   │   └── session.rs         # In-memory key lifecycle, auto-lock timer, lockout counter
@@ -124,7 +124,7 @@ secret/
 │   ├── ipc/                   # Command handlers exposed to frontend
 │   ├── import/                # CSV/JSON/SQL import, identifier sanitization (§9.8)
 │   └── backup/                # .enc export/import engine, snapshot rotation (§10.4)
-├── src/                       # React/Next.js frontend
+├── frontend/src/                       # React/Next.js frontend
 │   ├── app/ or pages/
 │   ├── components/
 │   │   ├── dashboard/
@@ -268,7 +268,7 @@ Since only obsidian and bone exist, status/priority/severity must be communicate
 - **Length Slider:** 8–64 characters, default 18
 - **Rule toggles:** Uppercase (`A-Z`), Lowercase (`a-z`), Digits (`0-9`), Symbols (`!@#$%^&*()_+-=[]{}|;:,.<>?`), Exclude Ambiguous (`1 l I 0 O`)
 - **Entropy display:** `E = L × log2(N)` computed live, with a labeled strength meter (e.g. Weak / Fair / Strong / Excellent)
-- **Generation must happen using a CSPRNG** (`crypto.getRandomValues` in the frontend, or the platform CSPRNG if generated in `src-core`), never `Math.random()`.
+- **Generation must happen using a CSPRNG** (`crypto.getRandomValues` in the frontend, or the platform CSPRNG if generated in `backend`), never `Math.random()`.
 - **No modulo bias:** when mapping random bytes to the selected character set, use rejection sampling (discard and re-draw bytes that would produce a non-uniform distribution) rather than `byte % charset.length`, which skews toward lower character indices.
 
 ---
@@ -429,7 +429,7 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 
 - Treat all note content as untrusted input when rendering the Preview mode, even though it's self-authored — pasted content, imported files, or a future "shared notes" feature could all introduce hostile Markdown/HTML.
 - Sanitize rendered HTML output (e.g. `DOMPurify` or equivalent) before injecting into the DOM; strip `<script>`, inline event handlers, and `javascript:` URIs.
-- The preview surface should have **zero** access to the IPC bridge — render it in a context (sandboxed iframe or equivalent) that cannot call back into `src-core` even if a sanitization bypass is later found. Defense in depth: sanitize _and_ sandbox, not one or the other.
+- The preview surface should have **zero** access to the IPC bridge — render it in a context (sandboxed iframe or equivalent) that cannot call back into `backend` even if a sanitization bypass is later found. Defense in depth: sanitize _and_ sandbox, not one or the other.
 
 ### 9.8 SQL Injection & Dynamic Identifier Safety (Data Workspace)
 
@@ -473,8 +473,8 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 ### 11.1 Dependency Hygiene
 
 - Lockfiles (`package-lock.json` / `Cargo.lock`) are committed and treated as the source of truth for exact versions — no floating version ranges resolved fresh at build time.
-- Run `npm audit` / `cargo audit` (or equivalent) as part of the build/CI process; a new dependency touching `src-core/auth/`, `src-core/db/`, or anything handling key material gets manual review before being added, not just an automated pass.
-- Minimize dependency count in the core process specifically — every crate in `src-core` is inside the trust boundary that holds your master key; the frontend can afford to be less paranoid since it never sees that key.
+- Run `npm audit` / `cargo audit` (or equivalent) as part of the build/CI process; a new dependency touching `backend/auth/`, `backend/db/`, or anything handling key material gets manual review before being added, not just an automated pass.
+- Minimize dependency count in the core process specifically — every crate in `backend` is inside the trust boundary that holds your master key; the frontend can afford to be less paranoid since it never sees that key.
 - Be wary of postinstall scripts from new/unfamiliar packages; prefer well-established, widely-audited crates/packages for anything crypto-adjacent (Argon2id, SQLCipher bindings, CSPRNG) rather than rolling or picking obscure implementations.
 
 ### 11.2 Build Hygiene
@@ -496,7 +496,7 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 
 > Not a feature phase — this is the prerequisite that makes Phase 1 possible at all. Nothing in Phase 1's exit criteria can be attempted until the project actually builds and launches.
 
-- Initialize the repository with the directory structure defined in §3.3 (`src-core/`, `src/`, module subfolders) — empty stubs are fine, but the shape must exist.
+- Initialize the repository with the directory structure defined in §3.3 (`backend/`, `frontend/src/`, module subfolders) — empty stubs are fine, but the shape must exist.
 - Initialize the Tauri + Rust core project; add the crates Phase 1 will need (SQLCipher binding, Argon2id implementation, `zeroize`, `subtle`) so the dependency tree resolves before any auth logic is written.
 - Initialize the React/Next.js + TypeScript frontend; configure Tailwind with the `--color-obsidian` / `--color-bone` token system from §5.2 from the start, not retrofitted later.
 - Confirm the Tauri window launches end-to-end (empty shell, no auth yet) — frontend and core process talking over IPC with a trivial "ping" command is a good smoke test.
@@ -552,9 +552,9 @@ Encryption-at-rest is necessary but not sufficient — SQLite's own temp/journal
 Any AI coding agent operating on this repository must self-assign to one of the roles defined in `AGENTS.md` and stay within its boundary. `AGENTS.md` is authoritative for persona detail, non-negotiables, and instinctive review checklists per role; this section is the quick map of ownership.
 
 - `@UIUX-Agent` — design system (§5), information architecture, interaction patterns. No implementation code.
-- `@Frontend-Agent` — `src/components/`, `src/state/`, `src/lib/`, Tailwind implementation, IPC client. Never touches raw SQLCipher connections or key material — IPC client only.
-- `@Backend-Agent` — `src-core/db/`, `src-core/ipc/`, `src-core/import/`, migrations, repositories, indexing, all of §8. Schema changes must update Section 8 of this file in the same PR, and migrations follow the snapshot-first rule in §10.1.
-- `@Security-Agent` — `src-core/auth/`, `src-core/backup/`, key derivation, session lifecycle, backup encryption, all of §9. No UI work, and sole reviewer on any change touching key material.
+- `@Frontend-Agent` — `frontend/src/components/`, `frontend/src/state/`, `frontend/src/lib/`, Tailwind implementation, IPC client. Never touches raw SQLCipher connections or key material — IPC client only.
+- `@Backend-Agent` — `backend/db/`, `backend/ipc/`, `backend/import/`, migrations, repositories, indexing, all of §8. Schema changes must update Section 8 of this file in the same PR, and migrations follow the snapshot-first rule in §10.1.
+- `@Security-Agent` — `backend/auth/`, `backend/backup/`, key derivation, session lifecycle, backup encryption, all of §9. No UI work, and sole reviewer on any change touching key material.
 - `@DevOps-Agent` — dependency management, CI/audit config, build scripts, release packaging (deferred per §11.3), backup/snapshot infrastructure.
 - `@QA-Agent` — test strategy, edge-case coverage (empty vault, max-length passwords, concurrent lock during write, corrupted backup import, malicious CSV headers, restart-during-lockout), and phase-exit sign-off before a phase in §12 is called complete.
 

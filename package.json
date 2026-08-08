@@ -1,37 +1,10 @@
 {
-  "name": "next-temp",
+  "name": "secret-workspace",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "tauri": "tauri"
-  },
-  "dependencies": {
-    "@tauri-apps/api": "^2.11.1",
-    "@tauri-apps/plugin-clipboard-manager": "^2.3.2",
-    "@tauri-apps/plugin-shell": "^2.3.5",
-    "dompurify": "^3.4.13",
-    "lucide-react": "^1.30.0",
-    "marked": "^18.0.9",
-    "next": "16.3.0",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@tauri-apps/cli": "^2.11.4",
-    "@types/dompurify": "^3.0.5",
-    "@types/marked": "^5.0.2",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.0",
-    "jsdom": "^29.1.1",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "dev": "cd backend && npx tauri dev",
+    "build": "cd backend && npx tauri build",
+    "tauri": "cd backend && npx tauri"
   }
 }

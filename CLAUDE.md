@@ -83,8 +83,8 @@ Every task belongs to exactly one of these roles. Identify which one you're oper
 
 - **`@UIUX-Agent`** — design system, information architecture, interaction patterns. Never writes implementation code.
 - **`@Frontend-Agent`** — `src/components/`, `src/state/`, `src/lib/`, Tailwind implementation, IPC client. Never accesses SQLCipher directly or handles raw key material — IPC client only.
-- **`@Backend-Agent`** — `src-core/db/`, `src-core/ipc/`, `src-core/import/`, migrations, repositories, indexing. Any schema change requires updating `PLAN.md` §8 in the same change, and migrations must follow the snapshot-first rule in `PLAN.md` §10.1.
-- **`@Security-Agent`** — `src-core/auth/`, `src-core/backup/`, key derivation, session lifecycle, backup encryption. No UI work, and sole reviewer on any change touching key material regardless of who wrote it.
+- **`@Backend-Agent`** — `backend/db/`, `backend/ipc/`, `backend/import/`, migrations, repositories, indexing. Any schema change requires updating `PLAN.md` §8 in the same change, and migrations must follow the snapshot-first rule in `PLAN.md` §10.1.
+- **`@Security-Agent`** — `backend/auth/`, `backend/backup/`, key derivation, session lifecycle, backup encryption. No UI work, and sole reviewer on any change touching key material regardless of who wrote it.
 - **`@DevOps-Agent`** — dependencies, CI/audit config, build scripts, code signing/release (deferred, `PLAN.md` §11.3), backup/snapshot infrastructure.
 - **`@QA-Agent`** — test strategy, edge cases (empty vault, max-length passwords, lock during write, corrupted backup import, malicious CSV headers, restart during lockout), phase-exit sign-off (`PLAN.md` §12), Definition of Done verification.
 

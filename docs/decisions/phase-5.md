@@ -19,7 +19,7 @@ To prevent a corrupted backup from destroying the live vault, the restore proces
 ### 3. Migration Snapshot Retention
 **@Backend-Agent:**
 Given this is a local-only app with no cloud storage, we cannot endlessly accumulate snapshots.
-**Decision:** We will retain exactly **the 3 most recent pre-migration snapshots** (`vault.vX_pre.db`). We will also retain the single most recent `pre_restore` snapshot. The `src-core/src/db/migrations.rs` module will automatically prune snapshots exceeding this limit during startup.
+**Decision:** We will retain exactly **the 3 most recent pre-migration snapshots** (`vault.vX_pre.db`). We will also retain the single most recent `pre_restore` snapshot. The `backend/src/db/migrations.rs` module will automatically prune snapshots exceeding this limit during startup.
 
 ### 4. Master Password Rotation Flow UX
 **@UIUX-Agent:**
