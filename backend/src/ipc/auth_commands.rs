@@ -32,7 +32,6 @@ pub fn setup_master_password(password: String, state: State<'_, AppState>) -> Re
     let conn = connection::open_database(state.db_path.to_str().unwrap(), &session_key)
         .map_err(|e| e.to_string())?;
 
-    connection::initialize_schema(&conn).map_err(|e| e.to_string())?;
     let _ = log_activity(&conn, "Vault Initialized", None);
 
     session.unlock(session_key);
@@ -98,7 +97,18 @@ pub fn get_auth_state(state: State<'_, AppState>) -> Result<bool, String> {
 
 #[tauri::command]
 pub fn needs_setup(state: State<'_, AppState>) -> Result<bool, String> {
-    Ok(!state.db_path.exists())
+    if !state.db_path.exists() {
+        return Ok(true);
+    }
+    
+    // If the file exists but is 0 bytes, setup failed halfway previously.
+    if let Ok(metadata) = std::fs::metadata(&state.db_path) {
+        if metadata.len() == 0 {
+            return Ok(true);
+        }
+    }
+    
+    Ok(false)
 }
 
 #[tauri::command]

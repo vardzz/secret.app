@@ -45,6 +45,9 @@ pub fn open_database(path: &str, key: &SessionKey) -> Result<Connection> {
     // A dummy read on sqlite_schema is enough to verify the key.
     conn.query_row("SELECT count(*) FROM sqlite_schema;", [], |_| Ok(()))?;
     
+    // Create base tables (like app_settings) before migrations
+    initialize_schema(&conn)?;
+    
     // Run migrations (will snapshot if schema_version < 2)
     migrations::run_migrations(&mut conn, path)?;
     
