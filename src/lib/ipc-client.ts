@@ -41,6 +41,31 @@ export interface Task {
   created_at: string;
 }
 
+export interface IncomeEntry {
+  id: string;
+  amount: number;
+  currency: string;
+  date: string;
+  category: string;
+  notes?: string;
+  created_at: string;
+}
+
+export interface DataImport {
+  id: string;
+  source_filename: string;
+  internal_table_name: string;
+  row_count: number;
+  imported_at: string;
+}
+
+export interface ActivityLog {
+  id: string;
+  action_type: string;
+  details?: string;
+  timestamp: string;
+}
+
 export const ipcClient = {
   // Auth Commands
   setupMasterPassword: (password: string) => invoke<void>("setup_master_password", { password }),
@@ -64,6 +89,9 @@ export const ipcClient = {
     
   copyToClipboard: (text: string) => 
     invoke<void>("copy_to_clipboard", { text }),
+    
+  checkDbIntegrity: () => 
+    invoke<string>("check_db_integrity"),
 
   // Notes Commands
   createFolder: (name: string, parentId?: string) =>
@@ -95,4 +123,28 @@ export const ipcClient = {
     invoke<void>("update_task", { id, title, description, status, priority, tags, dueDate }),
   deleteTask: (id: string) =>
     invoke<void>("delete_task", { id }),
+
+  // Income Commands
+  createIncomeEntry: (amount: number, currency: string, date: string, category: string, notes?: string) =>
+    invoke<IncomeEntry>("create_income_entry", { amount, currency, date, category, notes }),
+  getIncomeEntries: () =>
+    invoke<IncomeEntry[]>("get_income_entries"),
+  updateIncomeEntry: (id: string, amount: number, currency: string, date: string, category: string, notes?: string) =>
+    invoke<void>("update_income_entry", { id, amount, currency, date, category, notes }),
+  deleteIncomeEntry: (id: string) =>
+    invoke<void>("delete_income_entry", { id }),
+
+  // Data Workspace Commands
+  importCsvFile: (filePath: string) =>
+    invoke<DataImport>("import_csv_file", { filePath }),
+  getImports: () =>
+    invoke<DataImport[]>("get_imports"),
+  getImportData: (internalTableName: string) =>
+    invoke<[string[], string[][]]>("get_import_data", { internalTableName }),
+  deleteImport: (id: string) =>
+    invoke<void>("delete_import", { id }),
+
+  // Activity Log Commands
+  getActivityLogs: () =>
+    invoke<ActivityLog[]>("get_activity_logs"),
 };

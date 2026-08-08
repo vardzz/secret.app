@@ -13,6 +13,9 @@ use ipc::auth_commands::{self, AppState};
 use ipc::vault_commands;
 use ipc::notes_commands;
 use ipc::tasks_commands;
+use ipc::income_commands;
+use ipc::data_commands;
+use ipc::activity_commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -53,6 +56,7 @@ pub fn run() {
         vault_commands::update_credential,
         vault_commands::delete_credential,
         vault_commands::copy_to_clipboard,
+        vault_commands::check_db_integrity,
         notes_commands::create_folder,
         notes_commands::get_folders,
         notes_commands::update_folder,
@@ -66,6 +70,15 @@ pub fn run() {
         tasks_commands::get_tasks,
         tasks_commands::update_task,
         tasks_commands::delete_task,
+        income_commands::create_income_entry,
+        income_commands::get_income_entries,
+        income_commands::update_income_entry,
+        income_commands::delete_income_entry,
+        data_commands::import_csv_file,
+        data_commands::get_imports,
+        data_commands::get_import_data,
+        data_commands::delete_import,
+        activity_commands::get_activity_logs,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

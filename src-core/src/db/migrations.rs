@@ -94,6 +94,42 @@ pub fn run_migrations(conn: &mut Connection, db_path: &str) -> Result<()> {
         tx.commit()?;
     }
 
+    if schema_version < 4 {
+        // Snapshot
+        snapshot_db(db_path)?;
+        
+        let tx = conn.transaction()?;
+        
+        tx.execute_batch(
+            "
+            CREATE TABLE IF NOT EXISTS income_entries (
+                id TEXT PRIMARY KEY,
+                amount REAL NOT NULL,
+                currency TEXT DEFAULT 'USD',
+                date DATE NOT NULL,
+                category TEXT NOT NULL,
+                notes TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS data_imports (
+                id TEXT PRIMARY KEY,
+                source_filename TEXT NOT NULL,
+                internal_table_name TEXT NOT NULL,
+                row_count INTEGER NOT NULL,
+                imported_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_income_date ON income_entries(date);
+            CREATE INDEX IF NOT EXISTS idx_income_category ON income_entries(category);
+
+            UPDATE app_settings SET schema_version = 4 WHERE id = 1;
+            "
+        )?;
+
+        tx.commit()?;
+    }
+
     Ok(())
 }
 

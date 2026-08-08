@@ -6,6 +6,7 @@ use crate::auth::state_store::AuthStateStore;
 use crate::db::connection;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
+use crate::db::activity::log_activity;
 
 pub struct AppState {
     pub session: Mutex<SessionState>,
@@ -31,6 +32,7 @@ pub fn setup_master_password(password: String, state: State<'_, AppState>) -> Re
         .map_err(|e| e.to_string())?;
 
     connection::initialize_schema(&conn).map_err(|e| e.to_string())?;
+    let _ = log_activity(&conn, "Vault Initialized", None);
 
     session.unlock(session_key);
     Ok(())
@@ -52,8 +54,14 @@ pub fn unlock(password: String, state: State<'_, AppState>) -> Result<(), String
     let session_key = SessionKey::new(key);
     
     match connection::open_database(state.db_path.to_str().unwrap(), &session_key) {
-        Ok(_conn) => {
+        Ok(conn) => {
             session.unlock(session_key);
+            
+            if auth_store.failed_unlock_count > 0 {
+                let _ = log_activity(&conn, "Failed Unlock Attempts", Some(&format!("{} prior failed attempts", auth_store.failed_unlock_count)));
+            }
+            let _ = log_activity(&conn, "Vault Unlocked", None);
+            
             auth_store.failed_unlock_count = 0;
             auth_store.lockout_until = 0;
             let _ = auth_store.save(&state.auth_state_path);

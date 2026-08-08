@@ -46,6 +46,13 @@ pub fn update_credential(
 }
 
 #[tauri::command]
+pub fn check_db_integrity(state: State<'_, AppState>) -> Result<String, String> {
+    let conn = open_conn(&state)?;
+    let result: String = conn.query_row("PRAGMA integrity_check", [], |row| row.get(0)).map_err(|e| e.to_string())?;
+    Ok(result)
+}
+
+#[tauri::command]
 pub fn delete_credential(id: String, state: State<'_, AppState>) -> Result<(), String> {
     let mut conn = open_conn(&state)?;
     vault::delete_credential(&mut conn, &id)

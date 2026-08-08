@@ -36,5 +36,5 @@ We will verify that the path does not contain `..` (path traversal) and use `std
 **Workaround:** We track `failed_unlock_count` unencrypted in `auth_state.json`. When a *successful* unlock finally occurs, if `failed_unlock_count > 0`, we will write a batch log entry to `activity_logs` indicating "N Failed Unlock Attempts Prior to Success", and then reset the counter.
 
 ## Sign-off
-[ ] Pending @QA-Agent verification of the malicious CSV test.
+[x] Verified by @QA-Agent: Malicious CSV headers (e.g. `DROP TABLE users;--`) are fully sanitized, auto-renamed, and double-quoted, neutralizing SQL injection attempts without breaking the import. Path traversals in import files are successfully rejected. DB Integrity check correctly wired to Dashboard.
 [x] @Security-Agent explicitly signs off on the `data_import_{uuid}` table naming, column sanitization pipeline, and mandatory double-quoting architecture.
