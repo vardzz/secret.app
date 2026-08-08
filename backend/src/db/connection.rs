@@ -19,7 +19,25 @@ pub fn open_database(path: &str, key: &SessionKey) -> Result<Connection> {
     conn.execute("PRAGMA cipher_page_size = 4096;", [])?;
     conn.execute("PRAGMA secure_delete = ON;", [])?;
     conn.execute("PRAGMA temp_store = MEMORY;", [])?;
-    conn.execute("PRAGMA journal_mode = DELETE;", [])?;
+    // journal_mode PRAGMA always returns a row containing the new journal mode.
+    // rusqlite's `execute` will fail with "Execute returned results" if a row is returned.
+    let _: String = conn.query_row("PRAGMA journal_mode = DELETE;", [], |row| row.get(0))?;
+    
+    // Pragma read-back verification (Startup self-check per PLAN.md §9.2)
+    let secure_delete: i32 = conn.query_row("PRAGMA secure_delete;", [], |row| row.get(0))?;
+    if secure_delete != 1 {
+        return Err(rusqlite::Error::InvalidQuery);
+    }
+    
+    let temp_store: i32 = conn.query_row("PRAGMA temp_store;", [], |row| row.get(0))?;
+    if temp_store != 2 { // 2 = MEMORY
+        return Err(rusqlite::Error::InvalidQuery);
+    }
+    
+    let current_journal_mode: String = conn.query_row("PRAGMA journal_mode;", [], |row| row.get(0))?;
+    if current_journal_mode.to_lowercase() != "delete" {
+        return Err(rusqlite::Error::InvalidQuery);
+    }
     
     // Verify that the database can actually be decrypted by doing a quick integrity check or dummy read
     // A dummy read on sqlite_schema is enough to verify the key.

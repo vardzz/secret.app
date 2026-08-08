@@ -43,7 +43,11 @@ export function SetupScreen() {
           This is the only key to your vault. If you lose it, your data is unrecoverable.
         </p>
 
-        {error && <div className="mb-4 text-red-400 font-semibold">{error}</div>}
+        {error && (
+          <div className="mb-4 p-3 border border-[color:var(--color-border-subtle)] bg-[color:var(--color-surface-base)] text-[color:var(--color-text-primary)] font-bold rounded animate-pulse">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSetup} className="flex flex-col gap-4">
           <input

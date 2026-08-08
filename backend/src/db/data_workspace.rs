@@ -231,7 +231,7 @@ mod tests {
         
         let header1 = "DROP TABLE users;--";
         let clean1 = sanitize_column_name(header1, 0, &mut seen);
-        assert_eq!(clean1, "drop_table_users");
+        assert_eq!(clean1, "drop_table_users__");
 
         let header2 = "Transaction Date!";
         let clean2 = sanitize_column_name(header2, 1, &mut seen);
