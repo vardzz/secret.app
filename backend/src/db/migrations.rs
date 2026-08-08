@@ -135,15 +135,15 @@ pub fn run_migrations(conn: &mut Connection, db_path: &str) -> Result<()> {
 
 fn snapshot_db(db_path: &str) -> Result<()> {
     let path = Path::new(db_path);
-    if !path.exists() {
+    if !path.exists() || fs::metadata(path).map(|m| m.len() == 0).unwrap_or(true) {
         return Ok(());
     }
 
     let parent = path.parent().unwrap_or(Path::new(""));
     let backup_dir = parent.join("backups").join("pre-migration");
     
-    fs::create_dir_all(&backup_dir).map_err(|_| {
-        rusqlite::Error::ExecuteReturnedResults
+    fs::create_dir_all(&backup_dir).map_err(|e| {
+        rusqlite::Error::ToSqlConversionFailure(Box::new(e))
     })?;
 
     let timestamp = SystemTime::now()
@@ -155,8 +155,8 @@ fn snapshot_db(db_path: &str) -> Result<()> {
     let file_name = format!("{}_{}.db", file_stem, timestamp);
     let backup_path = backup_dir.join(file_name);
     
-    fs::copy(path, backup_path).map_err(|_| {
-        rusqlite::Error::ExecuteReturnedResults
+    fs::copy(path, backup_path).map_err(|e| {
+        rusqlite::Error::ToSqlConversionFailure(Box::new(e))
     })?;
 
     // Prune old snapshots (keep max 3)

@@ -9,16 +9,18 @@ pub fn open_database(path: &str, key: &SessionKey) -> Result<Connection> {
     let hex_key = hex::encode(&key.key);
     
     // Apply hardening pragmas as required by PLAN.md §9.2
-    conn.execute(&format!("PRAGMA key = \"x'{}'\";", hex_key), [])?;
+    conn.execute_batch(&format!("PRAGMA key = \"x'{}'\";", hex_key))?;
     
     // Clear the hex_key from memory as soon as we're done with it
     // Note: Rust's String doesn't easily zeroize, but we can do a best-effort wipe here.
     // (A more robust solution in a real C binding would pass the raw bytes directly, but rusqlite executes strings.)
     
     // SQLCipher specific tuning and hardening
-    conn.execute("PRAGMA cipher_page_size = 4096;", [])?;
-    conn.execute("PRAGMA secure_delete = ON;", [])?;
-    conn.execute("PRAGMA temp_store = MEMORY;", [])?;
+    conn.execute_batch("
+        PRAGMA cipher_page_size = 4096;
+        PRAGMA secure_delete = ON;
+        PRAGMA temp_store = MEMORY;
+    ")?;
     // journal_mode PRAGMA always returns a row containing the new journal mode.
     // rusqlite's `execute` will fail with "Execute returned results" if a row is returned.
     let _: String = conn.query_row("PRAGMA journal_mode = DELETE;", [], |row| row.get(0))?;
