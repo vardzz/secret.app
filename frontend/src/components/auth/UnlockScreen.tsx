@@ -17,6 +17,12 @@ export function UnlockScreen() {
     setLoading(true);
     setError('');
     
+    if (!(window as any).__TAURI_INTERNALS__) {
+      setError("Vault operations must be performed within the native Secret app, not a standard web browser.");
+      setLoading(false);
+      return;
+    }
+    
     try {
       await invoke('unlock', { password });
       await checkAuthState();

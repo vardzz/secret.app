@@ -25,6 +25,12 @@ export function SetupScreen() {
     setLoading(true);
     setError('');
     
+    if (!(window as any).__TAURI_INTERNALS__) {
+      setError("Vault operations must be performed within the native Secret app, not a standard web browser.");
+      setLoading(false);
+      return;
+    }
+    
     try {
       await invoke('setup_master_password', { password });
       await checkAuthState();
