@@ -48,6 +48,52 @@ pub fn run_migrations(conn: &mut Connection, db_path: &str) -> Result<()> {
         tx.commit()?;
     }
 
+    if schema_version < 3 {
+        // Snapshot
+        snapshot_db(db_path)?;
+        
+        let tx = conn.transaction()?;
+        
+        tx.execute_batch(
+            "
+            CREATE TABLE IF NOT EXISTS note_folders (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                parent_id TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS notes (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                content_markdown TEXT,
+                folder_id TEXT,
+                is_favorite BOOLEAN DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS tasks (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT,
+                status TEXT DEFAULT 'To Do',
+                priority TEXT DEFAULT 'Medium',
+                tags TEXT,
+                due_date DATE,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+            CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
+
+            UPDATE app_settings SET schema_version = 3 WHERE id = 1;
+            "
+        )?;
+
+        tx.commit()?;
+    }
+
     Ok(())
 }
 

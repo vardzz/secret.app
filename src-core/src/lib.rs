@@ -11,6 +11,8 @@ use std::path::PathBuf;
 use auth::session::SessionState;
 use ipc::auth_commands::{self, AppState};
 use ipc::vault_commands;
+use ipc::notes_commands;
+use ipc::tasks_commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -51,6 +53,19 @@ pub fn run() {
         vault_commands::update_credential,
         vault_commands::delete_credential,
         vault_commands::copy_to_clipboard,
+        notes_commands::create_folder,
+        notes_commands::get_folders,
+        notes_commands::update_folder,
+        notes_commands::delete_folder,
+        notes_commands::create_note,
+        notes_commands::get_notes,
+        notes_commands::update_note,
+        notes_commands::delete_note,
+        notes_commands::search_notes,
+        tasks_commands::create_task,
+        tasks_commands::get_tasks,
+        tasks_commands::update_task,
+        tasks_commands::delete_task,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

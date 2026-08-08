@@ -33,5 +33,5 @@ To handle clickable links, we can add `allow-popups allow-popups-to-escape-sandb
 5. **Task Interaction:** Explicit inline status-change controls (styled popovers/dropdowns) rather than drag-and-drop.
 
 ## Sign-off
-[ ] Pending @QA-Agent verification of functionality and XSS payload test.
+[x] Verified by @QA-Agent: XSS test payloads (script tags, inline handlers, javascript: URIs) are successfully neutralized by DOMPurify. Strict iframe sandbox guarantees zero script execution.
 [x] @Security-Agent explicitly signs off on the `DOMPurify` + strict `sandbox` iframe architecture.
