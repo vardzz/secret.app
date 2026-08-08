@@ -7,6 +7,7 @@ use crate::db::connection;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use crate::db::activity::log_activity;
+use rand::{rngs::OsRng, RngCore};
 
 pub struct AppState {
     pub session: Mutex<SessionState>,
@@ -98,4 +99,53 @@ pub fn get_auth_state(state: State<'_, AppState>) -> Result<bool, String> {
 #[tauri::command]
 pub fn needs_setup(state: State<'_, AppState>) -> Result<bool, String> {
     Ok(!state.db_path.exists())
+}
+
+#[tauri::command]
+pub fn change_master_password(old_password: String, new_password: String, state: State<'_, AppState>) -> Result<(), String> {
+    if new_password.len() < 12 {
+        return Err("New password too short".into());
+    }
+
+    let mut session = state.session.lock().unwrap();
+    let current_key = session.key.as_ref().ok_or("Vault is locked")?.clone();
+    
+    let mut auth_store = AuthStateStore::load(&state.auth_state_path);
+    
+    // Verify old password
+    let mut old_pwd_bytes = old_password.into_bytes();
+    let old_key = kdf::derive_key(&mut old_pwd_bytes, &auth_store.salt).map_err(|e| e.to_string())?;
+    
+    if old_key != current_key.key {
+        return Err("Invalid current password".into());
+    }
+
+    // Generate new salt and derive new key
+    let mut new_salt = [0u8; 16];
+    OsRng.fill_bytes(&mut new_salt);
+    
+    let mut new_pwd_bytes = new_password.into_bytes();
+    let new_key_bytes = kdf::derive_key(&mut new_pwd_bytes, &new_salt).map_err(|e| e.to_string())?;
+    let new_session_key = SessionKey::new(new_key_bytes);
+
+    // Open DB with current key to issue rekey
+    let conn = connection::open_database(state.db_path.to_str().unwrap(), &current_key)
+        .map_err(|e| e.to_string())?;
+
+    // PRAGMA rekey takes the new key as a hex string with "x'" prefix, but rusqlite bundled-sqlcipher 
+    // provides a high-level way to rekey via standard pragma bindings if we execute it.
+    // However, the safest and cleanest way is using the built-in raw execute for pragma rekey.
+    let hex_key = hex::encode(&new_session_key.key);
+    conn.execute(&format!("PRAGMA rekey = \"x'{}'\"", hex_key), []).map_err(|e| e.to_string())?;
+
+    let _ = log_activity(&conn, "Master Password Changed", None);
+
+    // Update state store with new salt
+    auth_store.salt = new_salt;
+    auth_store.save(&state.auth_state_path)?;
+
+    // Update session
+    session.unlock(new_session_key);
+
+    Ok(())
 }

@@ -69,6 +69,7 @@ export interface ActivityLog {
 export const ipcClient = {
   // Auth Commands
   setupMasterPassword: (password: string) => invoke<void>("setup_master_password", { password }),
+  changeMasterPassword: (oldPassword: string, newPassword: string) => invoke<void>("change_master_password", { oldPassword, newPassword }),
   unlock: (password: string) => invoke<void>("unlock", { password }),
   lock: () => invoke<void>("lock"),
   getAuthState: () => invoke<boolean>("get_auth_state"),
@@ -92,6 +93,12 @@ export const ipcClient = {
     
   checkDbIntegrity: () => 
     invoke<string>("check_db_integrity"),
+    
+  exportBackup: (outPath: string, password: string) =>
+    invoke<void>("export_backup", { outPath, password }),
+    
+  importBackup: (inPath: string, password: string) =>
+    invoke<void>("import_backup", { inPath, password }),
 
   // Notes Commands
   createFolder: (name: string, parentId?: string) =>

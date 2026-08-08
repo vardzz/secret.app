@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
+use rand::{rngs::OsRng, RngCore};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct AuthStateStore {
@@ -14,10 +15,10 @@ impl AuthStateStore {
         if let Ok(data) = fs::read_to_string(path) {
             serde_json::from_str(&data).unwrap_or_default()
         } else {
-            // Generate a secure salt on first run
             let mut state = Self::default();
-            // TODO: Use getrandom for real randomness
-            state.salt = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+            let mut salt = [0u8; 16];
+            OsRng.fill_bytes(&mut salt);
+            state.salt = salt;
             state
         }
     }

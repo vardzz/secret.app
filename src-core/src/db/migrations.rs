@@ -143,7 +143,7 @@ fn snapshot_db(db_path: &str) -> Result<()> {
     let backup_dir = parent.join("backups").join("pre-migration");
     
     fs::create_dir_all(&backup_dir).map_err(|_| {
-        rusqlite::Error::ExecuteReturnedResults // Dummy error mapping for simplicity
+        rusqlite::Error::ExecuteReturnedResults
     })?;
 
     let timestamp = SystemTime::now()
@@ -158,6 +158,25 @@ fn snapshot_db(db_path: &str) -> Result<()> {
     fs::copy(path, backup_path).map_err(|_| {
         rusqlite::Error::ExecuteReturnedResults
     })?;
+
+    // Prune old snapshots (keep max 3)
+    let mut snapshots = Vec::new();
+    if let Ok(entries) = fs::read_dir(&backup_dir) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.starts_with(file_stem) && name.ends_with(".db") {
+                snapshots.push(entry.path());
+            }
+        }
+    }
+    
+    if snapshots.len() > 3 {
+        snapshots.sort(); // Lexicographical sort works because format is stem_timestamp.db
+        let to_delete = snapshots.len() - 3;
+        for path in snapshots.iter().take(to_delete) {
+            let _ = fs::remove_file(path);
+        }
+    }
 
     Ok(())
 }

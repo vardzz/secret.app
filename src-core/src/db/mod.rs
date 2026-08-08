@@ -6,3 +6,4 @@ pub mod notes;
 pub mod tasks;
 pub mod income;
 pub mod data_workspace;
+pub mod backup;

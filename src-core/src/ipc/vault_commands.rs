@@ -1,7 +1,8 @@
 use tauri::State;
 use crate::ipc::auth_commands::AppState;
-use crate::db::{connection, vault, vault::VaultCredential};
+use crate::db::{connection, vault, backup, vault::VaultCredential};
 use tauri_plugin_clipboard_manager::ClipboardExt;
+use crate::auth::state_store::AuthStateStore;
 
 fn open_conn(state: &State<'_, AppState>) -> Result<rusqlite::Connection, String> {
     let session = state.session.lock().unwrap();
@@ -50,6 +51,35 @@ pub fn check_db_integrity(state: State<'_, AppState>) -> Result<String, String> 
     let conn = open_conn(&state)?;
     let result: String = conn.query_row("PRAGMA integrity_check", [], |row| row.get(0)).map_err(|e| e.to_string())?;
     Ok(result)
+}
+
+#[tauri::command]
+pub fn export_backup(out_path: String, password: String, state: State<'_, AppState>) -> Result<(), String> {
+    let session = state.session.lock().unwrap();
+    if session.is_locked() {
+        return Err("Vault is locked".into());
+    }
+    
+    let auth_store = AuthStateStore::load(&state.auth_state_path);
+    let path = std::path::Path::new(&out_path);
+    backup::export_backup(&state.db_path, path, &password, &auth_store.salt)
+}
+
+#[tauri::command]
+pub fn import_backup(in_path: String, password: String, state: State<'_, AppState>) -> Result<(), String> {
+    let path = std::path::Path::new(&in_path);
+    let auth_salt = backup::import_backup(&state.db_path, path, &password)?;
+    
+    // Update auth_state.json with the restored salt
+    let mut auth_store = AuthStateStore::load(&state.auth_state_path);
+    auth_store.salt = auth_salt;
+    auth_store.save(&state.auth_state_path)?;
+    
+    // Lock the session because the live DB key just changed underneath us
+    let mut session = state.session.lock().unwrap();
+    session.lock();
+    
+    Ok(())
 }
 
 #[tauri::command]

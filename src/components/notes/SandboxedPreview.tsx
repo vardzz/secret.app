@@ -12,8 +12,8 @@ export const SandboxedPreview: React.FC<SandboxedPreviewProps> = ({ htmlContent 
         <head>
           <style>
             :root {
-              --color-obsidian: #0f0e0d;
-              --color-bone: #f4ede4;
+              --color-obsidian: rgb(15, 14, 13);
+              --color-bone: rgb(244, 237, 228);
               --surface-base: var(--color-obsidian);
               --text-primary: var(--color-bone);
               --text-secondary: rgba(244, 237, 228, 0.64);

@@ -68,7 +68,7 @@ export function SetupScreen() {
             type="submit"
             disabled={loading}
             className="mt-2 w-full py-3 bg-[image:var(--accent-gradient)] bg-[color:var(--color-accent-solid)] text-[color:var(--color-accent-on-accent)] font-semibold rounded hover:opacity-90 transition-opacity"
-            style={{ backgroundImage: 'linear-gradient(135deg, #F4EDE4 0%, #E4D9C8 100%)' }}
+            style={{ backgroundImage: 'linear-gradient(135deg, rgba(244, 237, 228, 1) 0%, rgba(244, 237, 228, 0.8) 100%)' }}
           >
             {loading ? 'Deriving Key...' : 'Initialize Vault'}
           </button>
