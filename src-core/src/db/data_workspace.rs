@@ -116,6 +116,8 @@ pub fn import_csv(
         row_count += 1;
     }
 
+    drop(insert_stmt);
+
     let id = Uuid::new_v4().to_string();
     tx.execute(
         "INSERT INTO data_imports (id, source_filename, internal_table_name, row_count) VALUES (?1, ?2, ?3, ?4)",
