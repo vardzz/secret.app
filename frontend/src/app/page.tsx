@@ -5,19 +5,21 @@ import { invoke } from '@tauri-apps/api/core';
 import { AuthProvider, useAuth } from '../state/auth';
 import { SetupScreen } from '../components/auth/SetupScreen';
 import { UnlockScreen } from '../components/auth/UnlockScreen';
+import { OverviewModule } from '../components/overview/OverviewModule';
 import { VaultList } from '../components/vault/VaultList';
 import { NotesModule } from '../components/notes/NotesModule';
 import { TasksModule } from '../components/tasks/TasksModule';
 import { IncomeModule } from '../components/income/IncomeModule';
 import { DataWorkspaceModule } from '../components/data-workspace/DataWorkspaceModule';
 import { SettingsModule } from '../components/settings/SettingsModule';
+import { Key, LayoutGrid, FileEdit, CheckSquare, Mail, Database, Activity, SlidersHorizontal, Lock } from 'lucide-react';
 
-type ViewMode = 'vault' | 'notes' | 'tasks' | 'income' | 'data' | 'settings';
+type ViewMode = 'overview' | 'credentials' | 'notes' | 'tasks' | 'income' | 'data' | 'activity' | 'settings';
 
 function AppContent() {
   const { isUnlocked } = useAuth();
   const [needsSetup, setNeedsSetup] = useState<boolean | null>(null);
-  const [currentView, setCurrentView] = useState<ViewMode>('vault');
+  const [currentView, setCurrentView] = useState<ViewMode>('overview');
 
   useEffect(() => {
     if ((window as any).__TAURI_INTERNALS__) {
@@ -45,53 +47,73 @@ function AppContent() {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-surface-base text-bone font-sans">
       {/* Sidebar */}
-      <aside className="w-64 flex flex-col border-r border-border-subtle bg-[color:var(--color-obsidian)]">
+      <aside className="w-64 flex flex-col border-r border-border-subtle bg-[color:var(--color-obsidian)] shrink-0">
         <div className="p-6">
-          <h1 className="text-xl font-bold tracking-tight text-bone mb-8">Secret</h1>
-          <nav className="space-y-2">
+          <div className="flex items-center gap-3 mb-10 text-bone">
+            <div className="bg-bone text-obsidian p-1 rounded-md">
+              <Key size={18} className="rotate-45" />
+            </div>
+            <h1 className="text-xl font-bold tracking-tight">secret</h1>
+          </div>
+          
+          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase mb-4 px-2">
+            PRIVATE WORKSPACE
+          </div>
+          
+          <nav className="space-y-1.5">
             {[
-              { id: 'vault', label: 'Vault' },
-              { id: 'notes', label: 'Notes' },
-              { id: 'tasks', label: 'Tasks' },
-              { id: 'income', label: 'Income' },
-              { id: 'data', label: 'Data Workspace' },
-              { id: 'settings', label: 'Settings' }
-            ].map(item => (
-              <button
-                key={item.id}
-                onClick={() => setCurrentView(item.id as ViewMode)}
-                className={`w-full text-left px-4 py-2 rounded transition-colors text-sm font-medium ${
-                  currentView === item.id 
-                    ? 'bg-surface-raised text-bone' 
-                    : 'text-text-secondary hover:text-bone hover:bg-surface-raised/50'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+              { id: 'overview', label: 'Overview', icon: LayoutGrid },
+              { id: 'credentials', label: 'Credentials', icon: Key },
+              { id: 'notes', label: 'Secure notes', icon: FileEdit },
+              { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+              { id: 'income', label: 'Income', icon: Mail },
+              { id: 'data', label: 'Data workspace', icon: Database },
+              { id: 'activity', label: 'Activity', icon: Activity },
+              { id: 'settings', label: 'Settings', icon: SlidersHorizontal }
+            ].map(item => {
+              const Icon = item.icon;
+              const isActive = currentView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setCurrentView(item.id as ViewMode)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-sm font-medium ${
+                    isActive 
+                      ? 'bg-bone text-obsidian' 
+                      : 'text-text-secondary hover:text-bone hover:bg-surface-raised/50'
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </nav>
         </div>
         
         <div className="mt-auto p-6">
           <button 
-            className="w-full px-4 py-2 bg-red-900/20 border border-red-900 rounded text-red-400 text-sm font-medium hover:bg-red-900/40 transition-colors"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-border-subtle rounded-xl text-text-secondary text-sm font-medium hover:text-bone hover:border-border-default hover:bg-surface-raised/50 transition-all"
             onClick={async () => {
               await invoke('lock');
               window.location.reload();
             }}
           >
-            Lock Vault
+            <Lock size={16} />
+            <span>Lock vault</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <main className="flex-1 h-full overflow-hidden relative">
-        {currentView === 'vault' && <VaultList />}
+        {currentView === 'overview' && <OverviewModule />}
+        {currentView === 'credentials' && <VaultList />}
         {currentView === 'notes' && <NotesModule />}
         {currentView === 'tasks' && <TasksModule />}
         {currentView === 'income' && <IncomeModule />}
         {currentView === 'data' && <DataWorkspaceModule />}
+        {currentView === 'activity' && <div className="p-8 text-text-secondary">Activity Module</div>}
         {currentView === 'settings' && <SettingsModule />}
       </main>
     </div>
