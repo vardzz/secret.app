@@ -23,6 +23,20 @@ function AppContent() {
   const [currentView, setCurrentView] = useState<ViewMode>('overview');
 
   useEffect(() => {
+    // Dynamically scale the UI when window is smaller than 1024px
+    const handleResize = () => {
+      const baseWidth = 1024;
+      const currentWidth = window.innerWidth;
+      if (currentWidth < baseWidth) {
+        (document.body.style as any).zoom = currentWidth / baseWidth;
+      } else {
+        (document.body.style as any).zoom = 1;
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    handleResize(); // trigger immediately
+
     if ((window as any).__TAURI_INTERNALS__) {
       invoke<boolean>('needs_setup')
         .then((res) => setNeedsSetup(res))
@@ -31,6 +45,8 @@ function AppContent() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setNeedsSetup(true); // default to true if not in Tauri
     }
+
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   if (needsSetup === null) {
