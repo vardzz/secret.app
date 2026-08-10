@@ -61,7 +61,8 @@ const groupLogsByDate = (logs: ActivityLog[]) => {
   
   logs.forEach(log => {
     // Basic date parsing from timestamp (assuming ISO-like or parseable date)
-    const d = new Date(log.timestamp);
+    const timestampStr = log.timestamp.includes(' ') ? log.timestamp.replace(' ', 'T') : log.timestamp;
+    const d = new Date(timestampStr);
     if (isNaN(d.getTime())) {
       // Fallback if parsing fails
       if (!groups['OLDER']) groups['OLDER'] = [];
@@ -139,7 +140,8 @@ export const ActivityLogModule: React.FC = () => {
                 </div>
                 <div className="flex flex-col">
                   {dayLogs.map(log => {
-                    const time = new Date(log.timestamp);
+                    const timestampStr = log.timestamp.includes(' ') ? log.timestamp.replace(' ', 'T') : log.timestamp;
+                    const time = new Date(timestampStr);
                     const timeStr = isNaN(time.getTime()) ? '' : time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
                     const { title, subtitle } = formatLogText(log);
                     
