@@ -10,7 +10,49 @@ const getIconForAction = (action: string) => {
   if (lower.includes('create') || lower.includes('add')) return <FilePlus size={18} className="text-text-secondary" />;
   if (lower.includes('export') || lower.includes('backup')) return <Download size={18} className="text-text-secondary" />;
   if (lower.includes('update') || lower.includes('edit')) return <FileEdit size={18} className="text-text-secondary" />;
+  if (lower.includes('update') || lower.includes('edit')) return <FileEdit size={18} className="text-text-secondary" />;
   return <Info size={18} className="text-text-secondary" />;
+};
+
+// Helper to format title and subtitle
+const formatLogText = (log: ActivityLog) => {
+  const action = log.action_type.toLowerCase();
+  let title = log.action_type;
+  let subtitle = log.details || 'No details provided.';
+
+  if (action.includes('unlock')) {
+    title = 'Vault unlocked';
+    subtitle = 'Verified using your master password.';
+  } else if (action.includes('credential created')) {
+    title = 'Credential created';
+    subtitle = log.details ? `Added "${log.details}" to Credentials.` : subtitle;
+  } else if (action.includes('backup') || action.includes('export')) {
+    title = 'Encrypted backup exported';
+    subtitle = 'Local archive created and verified.';
+  } else if (action.includes('note updated')) {
+    title = 'Secure note updated';
+    subtitle = log.details ? `Edited "${log.details}".` : subtitle;
+  } else if (action.includes('credential updated')) {
+    title = 'Credential updated';
+    subtitle = log.details ? `Updated "${log.details}" in Credentials.` : subtitle;
+  } else if (action.includes('credential deleted')) {
+    title = 'Credential deleted';
+    subtitle = log.details ? `Removed "${log.details}" from Credentials.` : subtitle;
+  } else if (action.includes('note created')) {
+    title = 'Secure note created';
+    subtitle = log.details ? `Created "${log.details}".` : subtitle;
+  } else if (action.includes('task created')) {
+    title = 'Task created';
+    subtitle = log.details ? `Added task "${log.details}".` : subtitle;
+  } else if (action.includes('income entry')) {
+    title = log.action_type;
+    subtitle = log.details ? `Recorded ${log.details}.` : subtitle;
+  } else if (action.includes('data import')) {
+    title = 'Data imported';
+    subtitle = log.details ? `Imported dataset "${log.details}".` : subtitle;
+  }
+
+  return { title, subtitle };
 };
 
 // Group logs by day
@@ -99,16 +141,17 @@ export const ActivityLogModule: React.FC = () => {
                   {dayLogs.map(log => {
                     const time = new Date(log.timestamp);
                     const timeStr = isNaN(time.getTime()) ? '' : time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                    const { title, subtitle } = formatLogText(log);
                     
                     return (
                       <div key={log.id} className="flex justify-between py-6 border-b border-border-subtle last:border-b-0 hover:bg-surface-raised transition-colors group px-2 -mx-2 rounded-lg">
                         <div className="flex items-start gap-5">
                           <div className="mt-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                            {getIconForAction(log.action_type)}
+                            {getIconForAction(title)}
                           </div>
                           <div>
-                            <div className="font-semibold text-sm text-text-primary mb-2.5 tracking-tight">{log.action_type}</div>
-                            <div className="text-sm text-text-secondary">{log.details || 'No details provided.'}</div>
+                            <div className="font-semibold text-sm text-text-primary mb-2.5 tracking-tight">{title}</div>
+                            <div className="text-sm text-text-secondary">{subtitle}</div>
                           </div>
                         </div>
                         <div className="text-xs text-text-tertiary font-mono tracking-tight mt-0.5">
