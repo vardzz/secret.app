@@ -47,4 +47,17 @@ body {
   /* The app uses a subtle gradient for large surfaces per PLAN.md 5.3 */
   background-image: linear-gradient(135deg, var(--color-obsidian) 0%, rgba(15, 14, 13, 0.95) 100%);
   min-height: 100vh;
+  
+  /* Prevent dragging and text selection on UI elements to lock UI in place */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  cursor: default;
+}
+
+/* Allow text selection in inputs, textareas, and specific text elements */
+input, textarea, .selectable-text {
+  user-select: auto;
+  -webkit-user-select: auto;
+  cursor: text;
 }

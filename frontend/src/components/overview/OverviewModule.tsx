@@ -40,7 +40,7 @@ function IncomeItem({ title, amount, meta }: { title: string, amount: string, me
 
 export function OverviewModule() {
   return (
-    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-y-auto">
+    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-8 md:pt-12 px-6 md:px-12 relative overflow-y-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-10">
         <div>
@@ -54,7 +54,7 @@ export function OverviewModule() {
       </div>
 
       {/* Metrics */}
-      <div className="flex border-y border-border-subtle mb-12">
+      <div className="grid grid-cols-2 lg:grid-cols-4 border-y border-border-subtle mb-12">
         <MetricCard title="Credentials" value="128" subtitle="04 added this month" />
         <MetricCard title="Secure notes" value="24" subtitle="02 updated this week" />
         <MetricCard title="Open tasks" value="07" subtitle="03 due this week" />
@@ -62,7 +62,7 @@ export function OverviewModule() {
       </div>
 
       {/* Lists */}
-      <div className="grid grid-cols-2 gap-16 mb-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 mb-16">
         <div>
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-text-primary">Upcoming tasks</h3>

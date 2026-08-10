@@ -41,7 +41,7 @@ export function VaultList() {
   );
 
   return (
-    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-y-auto">
+    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-8 md:pt-12 px-6 md:px-12 relative overflow-y-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -58,7 +58,7 @@ export function VaultList() {
       </div>
 
       {/* Search & Filter */}
-      <div className="flex gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row gap-4 mb-8">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
           <input
@@ -76,15 +76,16 @@ export function VaultList() {
       </div>
 
       {/* Table */}
-      <div className="w-full pb-10">
-        <div className="grid grid-cols-[2fr_2fr_1fr_1fr] px-2 pb-4 border-b border-border-subtle">
-          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Name</div>
-          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Username</div>
-          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Last Used</div>
-          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase text-right">Actions</div>
-        </div>
-        
-        <div className="flex flex-col">
+      <div className="w-full pb-10 overflow-x-auto">
+        <div className="min-w-[600px]">
+          <div className="grid grid-cols-[2fr_2fr_1fr_1fr] px-2 pb-4 border-b border-border-subtle">
+            <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Name</div>
+            <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Username</div>
+            <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Last Used</div>
+            <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase text-right">Actions</div>
+          </div>
+          
+          <div className="flex flex-col">
           {filtered.length === 0 ? (
             <div className="text-center text-text-secondary mt-12">
               <p>No credentials found.</p>
@@ -114,6 +115,7 @@ export function VaultList() {
           )}
         </div>
       </div>
+    </div>
 
       <CredentialModal 
         isOpen={isModalOpen} 

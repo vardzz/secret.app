@@ -59,7 +59,7 @@ export const TasksModule: React.FC = () => {
   const displayedTasks = activeTab === 'open' ? openTasks : completedTasks;
 
   return (
-    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-y-auto">
+    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-8 md:pt-12 px-6 md:px-12 relative overflow-y-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-10">
         <div>
@@ -76,7 +76,7 @@ export const TasksModule: React.FC = () => {
       </div>
 
       {isCreating && (
-        <form onSubmit={handleCreateTask} className="mb-8 flex gap-4">
+        <form onSubmit={handleCreateTask} className="mb-8 flex flex-col sm:flex-row gap-4">
           <input
             type="text"
             autoFocus

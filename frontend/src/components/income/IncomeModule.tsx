@@ -53,7 +53,7 @@ export const IncomeModule: React.FC = () => {
   }, [entries]);
 
   return (
-    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-y-auto">
+    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-8 md:pt-12 px-6 md:px-12 relative overflow-y-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-10">
         <div>
@@ -70,7 +70,7 @@ export const IncomeModule: React.FC = () => {
       </div>
 
       {isCreating && (
-        <form onSubmit={handleCreate} className="mb-8 grid grid-cols-4 gap-4 p-6 border border-border-subtle rounded-xl bg-surface-raised">
+        <form onSubmit={handleCreate} className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 border border-border-subtle rounded-xl bg-surface-raised">
           <div>
             <label className="block text-[10px] font-semibold text-text-tertiary tracking-widest uppercase mb-2">Description</label>
             <input type="text" value={notes} onChange={e => setNotes(e.target.value)} required placeholder="e.g. Northstar Studio"
@@ -95,12 +95,12 @@ export const IncomeModule: React.FC = () => {
       )}
 
       {/* Metrics Row */}
-      <div className="flex border-y border-border-subtle mb-10">
-        <div className="flex-1 py-6 px-6 first:pl-2 border-r border-border-subtle">
+      <div className="flex flex-col sm:flex-row border-y border-border-subtle mb-10">
+        <div className="flex-1 py-6 px-6 sm:first:pl-2 border-b sm:border-b-0 sm:border-r border-border-subtle">
           <h4 className="text-sm text-text-primary mb-5">This month</h4>
           <div className="text-3xl font-bold font-mono tracking-tight">${totalThisMonth.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
         </div>
-        <div className="flex-1 py-6 px-6 border-r border-border-subtle">
+        <div className="flex-1 py-6 px-6 border-b sm:border-b-0 sm:border-r border-border-subtle">
           <h4 className="text-sm text-text-primary mb-5">All time</h4>
           <div className="text-3xl font-bold font-mono tracking-tight">${totalAllTime.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
         </div>
@@ -111,15 +111,16 @@ export const IncomeModule: React.FC = () => {
       </div>
 
       {/* Ledger Table */}
-      <div className="w-full pb-10">
-        <div className="grid grid-cols-[1fr_2fr_1fr_1fr] px-2 pb-4 border-b border-border-subtle">
-          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Date</div>
-          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Description</div>
-          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Category</div>
-          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase text-right">Amount</div>
-        </div>
-        
-        <div className="flex flex-col">
+      <div className="w-full pb-10 overflow-x-auto">
+        <div className="min-w-[600px]">
+          <div className="grid grid-cols-[1fr_2fr_1fr_1fr] px-2 pb-4 border-b border-border-subtle">
+            <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Date</div>
+            <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Description</div>
+            <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Category</div>
+            <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase text-right">Amount</div>
+          </div>
+          
+          <div className="flex flex-col">
           {entries.length === 0 ? (
             <div className="text-center text-text-secondary mt-12">
               <p>No income records found.</p>
@@ -151,6 +152,7 @@ export const IncomeModule: React.FC = () => {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 };

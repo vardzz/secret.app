@@ -54,7 +54,7 @@ export const NotesModule: React.FC = () => {
   
   if (activeNote) {
     return (
-      <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-hidden">
+      <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-8 md:pt-12 px-6 md:px-12 relative overflow-hidden">
         <button onClick={() => setActiveNote(null)} className="flex items-center gap-2 text-text-secondary hover:text-bone mb-8 transition-colors text-sm font-medium w-fit">
           <ArrowLeft size={16} />
           <span>Back to notes</span>
@@ -93,7 +93,7 @@ export const NotesModule: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-y-auto">
+    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-8 md:pt-12 px-6 md:px-12 relative overflow-y-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -110,7 +110,7 @@ export const NotesModule: React.FC = () => {
       </div>
 
       {/* Search & Filter */}
-      <div className="flex gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row gap-4 mb-8">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
           <input
@@ -128,7 +128,7 @@ export const NotesModule: React.FC = () => {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 gap-4 pb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
         {notes.length === 0 ? (
           <div className="col-span-2 text-center text-text-secondary mt-12">
             <p>No notes found.</p>
