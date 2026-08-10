@@ -41,6 +41,10 @@
   --color-accent-on-accent: var(--accent-on-accent);
 }
 
+html, body {
+  overscroll-behavior: none; /* Prevents rubber-banding/bouncing on max scroll */
+}
+
 body {
   background-color: var(--surface-base);
   color: var(--text-primary);
@@ -60,4 +64,27 @@ input, textarea, .selectable-text {
   user-select: auto;
   -webkit-user-select: auto;
   cursor: text;
+}
+
+/* Custom Scrollbar to match app vibe */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
