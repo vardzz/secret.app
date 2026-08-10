@@ -150,8 +150,9 @@ export const DataWorkspaceModule: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-8 md:pt-12 px-6 md:px-12 relative overflow-y-auto">
-      {/* Header */}
+    <div className="w-full h-full overflow-y-auto">
+      <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full pt-8 md:pt-12 px-6 md:px-12 relative">
+        {/* Header */}
       <div className="flex justify-between items-start mb-10">
         <div>
           <h3 className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase mb-3">Private Dataset</h3>
@@ -239,6 +240,7 @@ export const DataWorkspaceModule: React.FC = () => {
           )}
         </div>
       </div>
+    </div>
     </div>
     </div>
   );
