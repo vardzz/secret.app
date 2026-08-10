@@ -54,7 +54,7 @@ export const IncomeModule: React.FC = () => {
 
   return (
     <div className="w-full h-full overflow-y-auto">
-      <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full pt-8 md:pt-12 px-6 md:px-12 relative">
+      <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full pt-12 px-12 relative">
         {/* Header */}
       <div className="flex justify-between items-start mb-10">
         <div>
@@ -71,7 +71,7 @@ export const IncomeModule: React.FC = () => {
       </div>
 
       {isCreating && (
-        <form onSubmit={handleCreate} className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 border border-border-subtle rounded-xl bg-surface-raised">
+        <form onSubmit={handleCreate} className="mb-8 grid grid-cols-4 gap-4 p-6 border border-border-subtle rounded-xl bg-surface-raised">
           <div>
             <label className="block text-[10px] font-semibold text-text-tertiary tracking-widest uppercase mb-2">Description</label>
             <input type="text" value={notes} onChange={e => setNotes(e.target.value)} required placeholder="e.g. Northstar Studio"
@@ -96,12 +96,12 @@ export const IncomeModule: React.FC = () => {
       )}
 
       {/* Metrics Row */}
-      <div className="flex flex-col sm:flex-row border-y border-border-subtle mb-10">
-        <div className="flex-1 py-6 px-6 sm:first:pl-2 border-b sm:border-b-0 sm:border-r border-border-subtle">
+      <div className="flex flex-row border-y border-border-subtle mb-10">
+        <div className="flex-1 py-6 px-6 first:pl-2 border-r border-border-subtle">
           <h4 className="text-sm text-text-primary mb-5">This month</h4>
           <div className="text-3xl font-bold font-mono tracking-tight">${totalThisMonth.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
         </div>
-        <div className="flex-1 py-6 px-6 border-b sm:border-b-0 sm:border-r border-border-subtle">
+        <div className="flex-1 py-6 px-6 border-r border-border-subtle">
           <h4 className="text-sm text-text-primary mb-5">All time</h4>
           <div className="text-3xl font-bold font-mono tracking-tight">${totalAllTime.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
         </div>

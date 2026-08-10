@@ -282,7 +282,7 @@ export function CredentialModal({ isOpen, onClose, onSaved, existingCred }: Cred
               className="px-4 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex items-center gap-2"
             >
               <Trash2 size={18} />
-              <span className="hidden sm:inline">Delete</span>
+              <span className="inline">Delete</span>
             </button>
           ) : <div />}
           

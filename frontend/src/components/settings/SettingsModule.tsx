@@ -97,7 +97,7 @@ export const SettingsModule: React.FC = () => {
 
   return (
     <div className="w-full h-full overflow-y-auto">
-      <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full pt-8 md:pt-12 px-6 md:px-12 relative pb-12">
+      <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full pt-12 px-12 relative pb-12">
         {/* Header */}
         <div className="flex justify-between items-start mb-12">
           <div>

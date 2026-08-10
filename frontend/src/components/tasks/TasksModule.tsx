@@ -60,7 +60,7 @@ export const TasksModule: React.FC = () => {
 
   return (
     <div className="w-full h-full overflow-y-auto">
-      <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full pt-8 md:pt-12 px-6 md:px-12 relative">
+      <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full pt-12 px-12 relative">
         {/* Header */}
       <div className="flex justify-between items-start mb-10">
         <div>
@@ -77,7 +77,7 @@ export const TasksModule: React.FC = () => {
       </div>
 
       {isCreating && (
-        <form onSubmit={handleCreateTask} className="mb-8 flex flex-col sm:flex-row gap-4">
+        <form onSubmit={handleCreateTask} className="mb-8 flex flex-row gap-4">
           <input
             type="text"
             autoFocus

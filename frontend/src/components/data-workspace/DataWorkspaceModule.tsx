@@ -74,7 +74,7 @@ export const DataWorkspaceModule: React.FC = () => {
 
   if (activeImport) {
     return (
-      <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-8 md:pt-12 px-6 md:px-12 relative overflow-hidden">
+      <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-hidden">
         <button onClick={() => setActiveImport(null)} className="flex items-center gap-2 text-text-secondary hover:text-bone mb-8 transition-colors text-sm font-medium w-fit">
           <ArrowLeft size={16} />
           <span>Back to datasets</span>
@@ -151,7 +151,7 @@ export const DataWorkspaceModule: React.FC = () => {
 
   return (
     <div className="w-full h-full overflow-y-auto">
-      <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full pt-8 md:pt-12 px-6 md:px-12 relative">
+      <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full pt-12 px-12 relative">
         {/* Header */}
       <div className="flex justify-between items-start mb-10">
         <div>
@@ -168,7 +168,7 @@ export const DataWorkspaceModule: React.FC = () => {
       </div>
 
       {isImporting && (
-        <form onSubmit={handleImport} className="mb-8 flex flex-col sm:flex-row gap-4 p-6 border border-border-subtle rounded-xl bg-surface-raised">
+        <form onSubmit={handleImport} className="mb-8 flex flex-row gap-4 p-6 border border-border-subtle rounded-xl bg-surface-raised">
           <input
             type="text"
             placeholder="Absolute path to CSV file..."
@@ -183,7 +183,7 @@ export const DataWorkspaceModule: React.FC = () => {
       )}
 
       {/* Search & Filter */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-8">
+      <div className="flex flex-row gap-4 mb-8">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
           <input

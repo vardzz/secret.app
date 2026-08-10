@@ -50,7 +50,7 @@ export const Dashboard: React.FC = () => {
     <div className="flex flex-col h-full w-full bg-obsidian text-bone p-8">
       <h1 className="text-2xl font-medium tracking-wide mb-8">Dashboard</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-3 gap-6">
         <div className="bg-surface-base border border-subtle rounded-lg p-6">
           <h2 className="text-text-secondary text-sm font-medium tracking-wider mb-2">VAULT CREDENTIALS</h2>
           <div className="text-4xl font-light text-bone">{credentialCount}</div>
