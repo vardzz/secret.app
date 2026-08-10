@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ipcClient, Note, NoteFolder } from '../../lib/ipc-client';
+import { ipcClient, Note } from '../../lib/ipc-client';
 import { MarkdownEditor } from './MarkdownEditor';
+import { Plus, Search, ChevronDown, ArrowLeft } from 'lucide-react';
 
 export const NotesModule: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [folders, setFolders] = useState<NoteFolder[]>([]);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
 
   const fetchNotes = async () => {
     try {
@@ -20,23 +19,13 @@ export const NotesModule: React.FC = () => {
     }
   };
 
-  const fetchFolders = async () => {
-    try {
-      const data = await ipcClient.getFolders();
-      setFolders(data);
-    } catch (err) {
-      console.error('Failed to fetch folders:', err);
-    }
-  };
-
   useEffect(() => {
     fetchNotes();
-    fetchFolders();
   }, [searchQuery]);
 
   const handleCreateNote = async () => {
     try {
-      const newNote = await ipcClient.createNote("Untitled Note", "", activeFolderId || undefined, false);
+      const newNote = await ipcClient.createNote("Untitled Note", "", undefined, false);
       setNotes([newNote, ...notes]);
       setActiveNote(newNote);
     } catch (err) {
@@ -54,7 +43,6 @@ export const NotesModule: React.FC = () => {
         activeNote.folder_id,
         activeNote.is_favorite
       );
-      // Optimistic UI update
       setActiveNote({ ...activeNote, content_markdown: content });
       setNotes((prev) =>
         prev.map((n) => (n.id === activeNote.id ? { ...n, content_markdown: content } : n))
@@ -63,109 +51,110 @@ export const NotesModule: React.FC = () => {
       console.error('Failed to update note:', err);
     }
   };
-
-  const displayedNotes = activeFolderId
-    ? notes.filter((n) => n.folder_id === activeFolderId)
-    : notes;
-
-  return (
-    <div className="flex h-full w-full bg-obsidian text-bone">
-      {/* Sidebar: Folders */}
-      <div className="w-64 border-r border-subtle bg-surface-base flex flex-col">
-        <div className="p-4 border-b border-subtle font-medium text-text-secondary tracking-wide">
-          FOLDERS
-        </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          <button
-            onClick={() => setActiveFolderId(null)}
-            className={`w-full text-left px-3 py-2 rounded transition-colors ${
-              activeFolderId === null ? 'bg-bone text-obsidian' : 'hover:bg-surface-raised'
-            }`}
-          >
-            All Notes
-          </button>
-          {folders.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setActiveFolderId(f.id)}
-              className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                activeFolderId === f.id ? 'bg-bone text-obsidian' : 'hover:bg-surface-raised'
-              }`}
-            >
-              {f.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Middle Pane: Notes List */}
-      <div className="w-80 border-r border-subtle bg-surface-base flex flex-col">
-        <div className="p-4 border-b border-subtle space-y-3">
+  
+  if (activeNote) {
+    return (
+      <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-hidden">
+        <button onClick={() => setActiveNote(null)} className="flex items-center gap-2 text-text-secondary hover:text-bone mb-8 transition-colors text-sm font-medium w-fit">
+          <ArrowLeft size={16} />
+          <span>Back to notes</span>
+        </button>
+        
+        <div className="h-full flex flex-col space-y-6 pb-12">
           <input
             type="text"
-            placeholder="Search notes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent border border-subtle rounded px-3 py-2 text-sm focus:border-bone focus:outline-none transition-colors"
+            value={activeNote.title}
+            onChange={(e) => {
+              const newTitle = e.target.value;
+              setActiveNote({ ...activeNote, title: newTitle });
+              ipcClient.updateNote(
+                activeNote.id,
+                newTitle,
+                activeNote.content_markdown,
+                activeNote.folder_id,
+                activeNote.is_favorite
+              );
+              setNotes((prev) =>
+                prev.map((n) => (n.id === activeNote.id ? { ...n, title: newTitle } : n))
+              );
+            }}
+            className="text-4xl font-bold bg-transparent border-none outline-none text-text-primary placeholder:text-border-subtle"
+            placeholder="Note Title"
           />
-          <button
-            onClick={handleCreateNote}
-            className="w-full bg-bone text-obsidian rounded py-2 text-sm font-medium hover:opacity-90 transition-opacity"
-          >
-            + New Note
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {displayedNotes.map((note) => (
-            <div
-              key={note.id}
-              onClick={() => setActiveNote(note)}
-              className={`p-4 cursor-pointer border-b border-subtle transition-colors ${
-                activeNote?.id === note.id ? 'bg-surface-raised' : 'hover:bg-surface-raised hover:bg-opacity-50'
-              }`}
-            >
-              <h3 className="font-medium truncate">{note.title}</h3>
-              <p className="text-xs text-text-tertiary mt-1">
-                {new Date(note.updated_at).toLocaleDateString()}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Right Pane: Editor */}
-      <div className="flex-1 p-6 bg-obsidian overflow-hidden">
-        {activeNote ? (
-          <div className="h-full flex flex-col space-y-4">
-            <input
-              type="text"
-              value={activeNote.title}
-              onChange={(e) => {
-                const newTitle = e.target.value;
-                setActiveNote({ ...activeNote, title: newTitle });
-                ipcClient.updateNote(
-                  activeNote.id,
-                  newTitle,
-                  activeNote.content_markdown,
-                  activeNote.folder_id,
-                  activeNote.is_favorite
-                );
-                setNotes((prev) =>
-                  prev.map((n) => (n.id === activeNote.id ? { ...n, title: newTitle } : n))
-                );
-              }}
-              className="text-2xl font-medium bg-transparent border-none outline-none text-text-primary"
-              placeholder="Note Title"
-            />
+          <div className="flex-1 overflow-hidden border border-border-subtle rounded-xl bg-surface-raised">
             <MarkdownEditor
               initialContent={activeNote.content_markdown || ''}
               onContentChange={handleUpdateNote}
             />
           </div>
-        ) : (
-          <div className="h-full flex items-center justify-center text-text-tertiary">
-            Select a note to edit or create a new one.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-y-auto">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h3 className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase mb-3">Encrypted Notebook</h3>
+          <h1 className="text-4xl font-bold text-text-primary tracking-tight">Secure notes</h1>
+        </div>
+        <button
+          onClick={handleCreateNote}
+          className="flex items-center gap-2 bg-bone text-obsidian px-5 py-2.5 rounded-lg font-medium hover:opacity-90 transition-opacity"
+        >
+          <Plus size={18} />
+          <span>New note</span>
+        </button>
+      </div>
+
+      {/* Search & Filter */}
+      <div className="flex gap-4 mb-8">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
+          <input
+            type="text"
+            placeholder="Search notes"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent border border-border-subtle rounded-xl py-3 pl-11 pr-4 text-text-primary focus:outline-none focus:border-border-default transition-colors text-sm"
+          />
+        </div>
+        <button className="flex items-center justify-between gap-4 px-5 py-3 bg-transparent border border-border-subtle rounded-xl hover:border-border-default transition-colors text-sm font-medium min-w-[120px]">
+          <span>All notes</span>
+          <ChevronDown size={16} className="text-text-secondary" />
+        </button>
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-2 gap-4 pb-10">
+        {notes.length === 0 ? (
+          <div className="col-span-2 text-center text-text-secondary mt-12">
+            <p>No notes found.</p>
           </div>
+        ) : (
+          notes.map(note => {
+            const displayDate = note.updated_at 
+              ? new Date(note.updated_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase()
+              : 'AUG 07'; // Fallback
+            const snippet = note.content_markdown ? note.content_markdown.substring(0, 100) : "Empty note";
+            return (
+              <div 
+                key={note.id}
+                onClick={() => setActiveNote(note)}
+                className="p-6 border border-border-subtle rounded-xl bg-surface-base hover:border-border-default transition-colors cursor-pointer flex flex-col h-44"
+              >
+                <h3 className="font-semibold text-text-primary mb-3">{note.title}</h3>
+                <p className="text-sm text-text-secondary line-clamp-3 leading-relaxed flex-1">
+                  {snippet}
+                </p>
+                <div className="text-[10px] font-semibold text-text-tertiary uppercase tracking-widest mt-4">
+                  UPDATED {displayDate}
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
     </div>
