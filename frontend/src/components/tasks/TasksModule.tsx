@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ipcClient, Task } from '../../lib/ipc-client';
-
-const COLUMNS = ['To Do', 'In Progress', 'Done'];
-const PRIORITIES = ['Low', 'Medium', 'High'];
+import { Plus, Check } from 'lucide-react';
 
 export const TasksModule: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [activePopover, setActivePopover] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [activeTab, setActiveTab] = useState<'open' | 'completed'>('open');
 
   const fetchTasks = async () => {
     try {
@@ -29,12 +28,14 @@ export const TasksModule: React.FC = () => {
       const newTask = await ipcClient.createTask(newTaskTitle, "", "To Do", "Medium");
       setTasks([newTask, ...tasks]);
       setNewTaskTitle('');
+      setIsCreating(false);
     } catch (err) {
       console.error('Failed to create task:', err);
     }
   };
 
-  const updateTaskStatus = async (task: Task, newStatus: string) => {
+  const toggleTaskCompletion = async (task: Task) => {
+    const newStatus = task.status === 'Done' ? 'To Do' : 'Done';
     try {
       await ipcClient.updateTask(
         task.id,
@@ -48,102 +49,109 @@ export const TasksModule: React.FC = () => {
       setTasks((prev) =>
         prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
       );
-      setActivePopover(null);
     } catch (err) {
       console.error('Failed to update task status:', err);
     }
   };
 
-  const getPriorityClasses = (priority: string) => {
-    switch (priority) {
-      case 'High':
-        return 'font-bold border border-bone text-bone px-2 py-0.5 rounded text-xs tracking-wider';
-      case 'Medium':
-        return 'font-medium border border-subtle bg-surface-raised px-2 py-0.5 rounded text-xs tracking-wider text-bone';
-      case 'Low':
-      default:
-        return 'font-normal border border-transparent px-2 py-0.5 rounded text-xs tracking-wider text-text-secondary';
-    }
-  };
+  const openTasks = tasks.filter(t => t.status !== 'Done');
+  const completedTasks = tasks.filter(t => t.status === 'Done');
+  const displayedTasks = activeTab === 'open' ? openTasks : completedTasks;
 
   return (
-    <div className="flex flex-col h-full w-full bg-obsidian text-bone p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-medium tracking-wide">Tasks</h1>
-        <form onSubmit={handleCreateTask} className="flex space-x-3 w-96">
+    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-y-auto">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-10">
+        <div>
+          <h3 className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase mb-3">Personal Work</h3>
+          <h1 className="text-4xl font-bold text-text-primary tracking-tight">Tasks</h1>
+        </div>
+        <button
+          onClick={() => setIsCreating(!isCreating)}
+          className="flex items-center gap-2 bg-bone text-obsidian px-5 py-2.5 rounded-lg font-medium hover:opacity-90 transition-opacity"
+        >
+          <Plus size={18} />
+          <span>New task</span>
+        </button>
+      </div>
+
+      {isCreating && (
+        <form onSubmit={handleCreateTask} className="mb-8 flex gap-4">
           <input
             type="text"
+            autoFocus
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
-            placeholder="Add a new task..."
-            className="flex-1 bg-transparent border border-subtle rounded px-4 py-2 text-sm focus:border-bone focus:outline-none transition-colors"
+            placeholder="Task description..."
+            className="flex-1 bg-transparent border border-border-subtle rounded-xl px-4 py-3 text-sm focus:border-border-default focus:outline-none transition-colors"
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-bone text-obsidian rounded text-sm font-medium hover:opacity-90 transition-opacity"
+            className="px-6 py-3 bg-surface-raised border border-border-subtle rounded-xl text-sm font-medium hover:text-bone hover:border-border-default transition-colors"
           >
             Add Task
           </button>
         </form>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-8 border-b border-border-subtle mb-4">
+        <button 
+          onClick={() => setActiveTab('open')}
+          className={`pb-4 text-sm font-semibold transition-colors border-b-2 ${
+            activeTab === 'open' ? 'text-text-primary border-text-primary' : 'text-text-secondary border-transparent hover:text-text-primary'
+          }`}
+        >
+          Open <span className={`font-normal ml-1.5 ${activeTab === 'open' ? 'text-text-secondary' : 'text-text-tertiary'}`}>· {openTasks.length}</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('completed')}
+          className={`pb-4 text-sm font-semibold transition-colors border-b-2 ${
+            activeTab === 'completed' ? 'text-text-primary border-text-primary' : 'text-text-secondary border-transparent hover:text-text-primary'
+          }`}
+        >
+          Completed
+        </button>
       </div>
 
-      <div className="flex flex-1 space-x-6 overflow-hidden">
-        {COLUMNS.map((colName) => (
-          <div key={colName} className="flex-1 flex flex-col bg-surface-base border border-subtle rounded-lg overflow-hidden">
-            <div className="p-4 border-b border-subtle bg-obsidian font-medium tracking-wide">
-              {colName}
-              <span className="ml-2 text-text-tertiary text-sm font-mono">
-                {tasks.filter((t) => t.status === colName).length}
-              </span>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {tasks
-                .filter((t) => t.status === colName)
-                .map((task) => (
-                  <div
-                    key={task.id}
-                    className="group relative bg-obsidian border border-subtle rounded-md p-4 transition-all hover:border-bone/50"
-                  >
-                    <h3 className={`font-medium ${task.status === 'Done' ? 'line-through text-text-secondary' : 'text-text-primary'}`}>
-                      {task.title}
-                    </h3>
-                    
-                    <div className="flex items-center justify-between mt-4">
-                      <span className={getPriorityClasses(task.priority)}>
-                        {task.priority.toUpperCase()}
-                      </span>
-                      
-                      <div className="relative">
-                        <button
-                          onClick={() => setActivePopover(activePopover === task.id ? null : task.id)}
-                          className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
-                        >
-                          Change Status
-                        </button>
-                        
-                        {activePopover === task.id && (
-                          <div className="absolute right-0 bottom-full mb-2 w-40 bg-surface-base border border-subtle rounded shadow-xl overflow-hidden z-10">
-                            {COLUMNS.map((status) => (
-                              <button
-                                key={status}
-                                onClick={() => updateTaskStatus(task, status)}
-                                className={`w-full text-left px-4 py-2 text-sm hover:bg-surface-raised transition-colors ${
-                                  task.status === status ? 'text-bone font-medium' : 'text-text-secondary'
-                                }`}
-                              >
-                                {status}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
+      {/* List View */}
+      <div className="flex flex-col pb-10">
+        {displayedTasks.length === 0 ? (
+          <div className="text-center text-text-secondary mt-12">
+            <p>No {activeTab} tasks found.</p>
           </div>
-        ))}
+        ) : (
+          displayedTasks.map(task => (
+            <div 
+              key={task.id} 
+              className="flex items-center justify-between py-5 border-b border-border-subtle group transition-colors"
+            >
+              <div className="flex items-start gap-4">
+                <button 
+                  onClick={() => toggleTaskCompletion(task)}
+                  className={`mt-0.5 w-5 h-5 rounded-full border transition-colors flex items-center justify-center shrink-0 ${
+                    task.status === 'Done' 
+                      ? 'border-text-secondary bg-surface-raised text-text-secondary' 
+                      : 'border-text-secondary hover:border-bone hover:bg-surface-raised/50 text-transparent'
+                  }`}
+                >
+                  {task.status === 'Done' && <Check size={12} />}
+                </button>
+                <div>
+                  <div className={`font-semibold text-sm mb-1.5 ${task.status === 'Done' ? 'text-text-secondary line-through' : 'text-text-primary'}`}>
+                    {task.title}
+                  </div>
+                  <div className="text-[11px] text-text-tertiary uppercase tracking-widest">
+                    {task.tags || 'PERSONAL'} · {task.priority.toUpperCase()} PRIORITY
+                  </div>
+                </div>
+              </div>
+              <div className="text-xs text-text-secondary font-mono tracking-tight">
+                {task.due_date || 'AUG 12'}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
