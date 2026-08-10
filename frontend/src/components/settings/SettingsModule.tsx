@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ipcClient } from '../../lib/ipc-client';
+import { Plus } from 'lucide-react';
 
 export const SettingsModule: React.FC = () => {
   const [oldPassword, setOldPassword] = useState('');
@@ -13,6 +14,13 @@ export const SettingsModule: React.FC = () => {
   
   const [statusMsg, setStatusMsg] = useState({ text: '', type: '' });
 
+  // UI State for expanding settings
+  const [activeForm, setActiveForm] = useState<string | null>(null);
+
+  // Mock settings state for toggles
+  const [requirePassword, setRequirePassword] = useState(true);
+  const [activityLedger, setActivityLedger] = useState(true);
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
@@ -24,7 +32,6 @@ export const SettingsModule: React.FC = () => {
       return;
     }
     
-    // As decided in docs/decisions/phase-5.md, warn the user heavily
     const confirmed = window.confirm(
       "WARNING: Your old backup files (.enc) will NOT work with your new password. You must create a new backup immediately after changing your password.\n\nProceed?"
     );
@@ -36,6 +43,7 @@ export const SettingsModule: React.FC = () => {
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setActiveForm(null);
     } catch (err: any) {
       setStatusMsg({ text: `Failed to change password: ${err}`, type: 'error' });
     }
@@ -51,6 +59,7 @@ export const SettingsModule: React.FC = () => {
       setStatusMsg({ text: `Backup successfully exported to ${backupPath}`, type: 'success' });
       setBackupPath('');
       setBackupPassword('');
+      setActiveForm(null);
     } catch (err: any) {
       setStatusMsg({ text: `Backup export failed: ${err}`, type: 'error' });
     }
@@ -71,100 +80,195 @@ export const SettingsModule: React.FC = () => {
       setStatusMsg({ text: `Backup successfully restored from ${restorePath}. Restarting the app is recommended.`, type: 'success' });
       setRestorePath('');
       setRestorePassword('');
+      setActiveForm(null);
     } catch (err: any) {
       setStatusMsg({ text: `Backup restore failed: ${err}`, type: 'error' });
     }
   };
 
+  const Toggle = ({ checked, onChange }: { checked: boolean, onChange: () => void }) => (
+    <button 
+      onClick={onChange}
+      className={`w-11 h-6 rounded-full flex items-center transition-colors px-1 ${checked ? 'bg-bone' : 'bg-surface-raised border border-border-subtle'}`}
+    >
+      <div className={`w-4 h-4 rounded-full transition-transform ${checked ? 'bg-obsidian translate-x-5' : 'bg-text-secondary translate-x-0'}`} />
+    </button>
+  );
+
   return (
-    <div className="flex h-full w-full bg-obsidian text-bone p-8 overflow-y-auto">
-      <div className="max-w-4xl mx-auto space-y-8 w-full">
-        <h1 className="text-3xl font-medium tracking-wide">Settings & Security</h1>
+    <div className="w-full h-full overflow-y-auto">
+      <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full pt-8 md:pt-12 px-6 md:px-12 relative pb-12">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-12">
+          <div>
+            <h3 className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase mb-3">Vault Preferences</h3>
+            <h1 className="text-4xl font-bold text-text-primary tracking-tight">Settings</h1>
+          </div>
+          <button className="flex items-center gap-2 bg-bone text-obsidian px-5 py-2.5 rounded-lg font-medium hover:opacity-90 transition-opacity">
+            <Plus size={18} />
+            <span>Export backup</span>
+          </button>
+        </div>
 
         {statusMsg.text && (
-          <div className={`p-4 rounded border ${statusMsg.type === 'error' ? 'border-red-900 bg-red-900/20 text-red-400' : 'border-green-900 bg-green-900/20 text-green-400'}`}>
+          <div className={`p-4 rounded-lg mb-8 text-sm ${statusMsg.type === 'error' ? 'border border-red-900/50 bg-red-900/10 text-red-400' : 'border border-green-900/50 bg-green-900/10 text-green-400'}`}>
             {statusMsg.text}
           </div>
         )}
 
-        {/* Security Model Disclosure */}
-        <section className="bg-surface-base border border-subtle rounded-lg p-6">
-          <h2 className="text-xl font-medium mb-4">Security Model & Threat Profile</h2>
-          <div className="text-sm text-text-secondary space-y-4">
-            <p>
-              <strong className="text-bone">What Secret DOES protect you against:</strong><br />
-              - <em>Stolen Laptop (at rest):</em> The SQLite database is encrypted with SQLCipher (AES-256-GCM). Without your Master Password, the attacker has a random blob of bytes.<br />
-              - <em>Cloud Breaches:</em> Secret is entirely offline. There are no cloud sync servers to breach. Your data stays on your drive.<br />
-              - <em>Malicious Import Files:</em> The CSV engine forces strict schema anonymization. Malicious headers (e.g. SQL Injection payloads) are sanitized or dropped before they touch SQLite.
-            </p>
-            <p>
-              <strong className="text-bone">What Secret DOES NOT protect you against:</strong><br />
-              - <em>Active Malware / Keyloggers:</em> If your machine is actively compromised by a keylogger or screen-reader while you are typing your master password or viewing credentials, the vault is exposed.<br />
-              - <em>Stolen Laptop (unlocked state):</em> If your laptop is stolen while Secret is unlocked and running, the data is accessible. Always lock your PC and Vault when stepping away.
-            </p>
-          </div>
-        </section>
-
-        {/* Backup & Restore */}
-        <section className="bg-surface-base border border-subtle rounded-lg p-6">
-          <h2 className="text-xl font-medium mb-4">Backup Engine</h2>
-          <p className="text-sm text-text-secondary mb-6">
-            Backups are exported as `.enc` files using ChaCha20-Poly1305 authenticated encryption. They are completely independent of the live vault and are safe to store on cloud drives.
-          </p>
+        {/* Settings List */}
+        <div className="flex flex-col max-w-3xl space-y-12">
           
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="font-medium">Export Backup</h3>
-              <input type="text" placeholder="Absolute path (e.g. C:\backup.enc)" value={backupPath} onChange={e => setBackupPath(e.target.value)}
-                className="w-full bg-obsidian border border-subtle rounded px-3 py-2 text-sm focus:border-bone focus:outline-none" />
-              <input type="password" placeholder="Current Master Password" value={backupPassword} onChange={e => setBackupPassword(e.target.value)}
-                className="w-full bg-obsidian border border-subtle rounded px-3 py-2 text-sm focus:border-bone focus:outline-none" />
-              <button onClick={handleExportBackup} className="w-full bg-surface-raised border border-subtle hover:bg-subtle text-bone py-2 rounded text-sm transition-colors">
-                Export .enc
-              </button>
-            </div>
+          {/* Session Section */}
+          <section>
+            <h2 className="text-sm font-bold text-text-primary mb-6 tracking-wide">Session</h2>
+            
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold text-sm text-text-primary mb-1">Auto-lock</div>
+                  <div className="text-sm text-text-secondary">Lock your vault after inactivity.</div>
+                </div>
+                <select className="bg-obsidian border border-border-subtle text-text-primary text-sm rounded-lg px-4 py-2.5 min-w-[140px] focus:outline-none focus:border-bone cursor-pointer appearance-none">
+                  <option>15 minutes</option>
+                  <option>30 minutes</option>
+                  <option>1 hour</option>
+                  <option>Never</option>
+                </select>
+              </div>
 
-            <div className="space-y-4">
-              <h3 className="font-medium text-red-400">Restore Backup</h3>
-              <input type="text" placeholder="Absolute path to .enc" value={restorePath} onChange={e => setRestorePath(e.target.value)}
-                className="w-full bg-obsidian border border-subtle rounded px-3 py-2 text-sm focus:border-red-900 focus:outline-none" />
-              <input type="password" placeholder="Backup Password" value={restorePassword} onChange={e => setRestorePassword(e.target.value)}
-                className="w-full bg-obsidian border border-subtle rounded px-3 py-2 text-sm focus:border-red-900 focus:outline-none" />
-              <button onClick={handleImportBackup} className="w-full bg-red-900/20 border border-red-900 hover:bg-red-900/40 text-red-400 py-2 rounded text-sm transition-colors">
-                Verify & Restore
-              </button>
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold text-sm text-text-primary mb-1">Clear clipboard</div>
+                  <div className="text-sm text-text-secondary">Remove copied secrets automatically.</div>
+                </div>
+                <select className="bg-obsidian border border-border-subtle text-text-primary text-sm rounded-lg px-4 py-2.5 min-w-[140px] focus:outline-none focus:border-bone cursor-pointer appearance-none">
+                  <option>30 seconds</option>
+                  <option>1 minute</option>
+                  <option>2 minutes</option>
+                  <option>Never</option>
+                </select>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Change Master Password */}
-        <section className="bg-surface-base border border-subtle rounded-lg p-6">
-          <h2 className="text-xl font-medium mb-4 text-red-400">Change Master Password</h2>
-          <p className="text-sm text-text-secondary mb-6">
-            This will immediately rekey the active vault. <span className="text-bone font-medium">All existing backup files will be invalidated</span> because they are encrypted with the old password.
-          </p>
-          <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">Current Password</label>
-              <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required
-                className="w-full bg-obsidian border border-subtle rounded px-3 py-2 text-sm focus:border-red-900 focus:outline-none" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">New Password (min 12 chars)</label>
-              <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={12}
-                className="w-full bg-obsidian border border-subtle rounded px-3 py-2 text-sm focus:border-red-900 focus:outline-none" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">Confirm New Password</label>
-              <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={12}
-                className="w-full bg-obsidian border border-subtle rounded px-3 py-2 text-sm focus:border-red-900 focus:outline-none" />
-            </div>
-            <button type="submit" className="w-full bg-red-900/20 border border-red-900 hover:bg-red-900/40 text-red-400 py-2 rounded font-medium transition-colors">
-              Rekey Vault
-            </button>
-          </form>
-        </section>
+          <hr className="border-border-subtle" />
 
+          {/* Backup Section */}
+          <section>
+            <h2 className="text-sm font-bold text-text-primary mb-6 tracking-wide">Backup</h2>
+            
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold text-sm text-text-primary mb-1">Encrypted exports</div>
+                  <div className="text-sm text-text-secondary">Keep an offline recovery copy of your vault.</div>
+                </div>
+                <button 
+                  onClick={() => setActiveForm(activeForm === 'export' ? null : 'export')}
+                  className="border border-border-subtle text-bone hover:bg-surface-raised transition-colors text-sm rounded-lg px-5 py-2.5"
+                >
+                  Export now
+                </button>
+              </div>
+
+              {activeForm === 'export' && (
+                <div className="bg-surface-raised border border-border-subtle rounded-lg p-5 space-y-4">
+                  <input type="text" placeholder="Absolute path (e.g. C:\backup.enc)" value={backupPath} onChange={e => setBackupPath(e.target.value)}
+                    className="w-full bg-obsidian border border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-bone focus:outline-none" />
+                  <input type="password" placeholder="Current Master Password" value={backupPassword} onChange={e => setBackupPassword(e.target.value)}
+                    className="w-full bg-obsidian border border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-bone focus:outline-none" />
+                  <button onClick={handleExportBackup} className="bg-bone text-obsidian font-medium py-2 px-4 rounded-lg text-sm w-full">
+                    Confirm Export
+                  </button>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold text-sm text-text-primary mb-1">Import encrypted archive</div>
+                  <div className="text-sm text-text-secondary">Merge a verified Secret backup.</div>
+                </div>
+                <button 
+                  onClick={() => setActiveForm(activeForm === 'import' ? null : 'import')}
+                  className="border border-border-subtle text-bone hover:bg-surface-raised transition-colors text-sm rounded-lg px-5 py-2.5"
+                >
+                  Import
+                </button>
+              </div>
+
+              {activeForm === 'import' && (
+                <div className="bg-surface-raised border border-border-subtle rounded-lg p-5 space-y-4">
+                  <input type="text" placeholder="Absolute path to .enc" value={restorePath} onChange={e => setRestorePath(e.target.value)}
+                    className="w-full bg-obsidian border border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-bone focus:outline-none" />
+                  <input type="password" placeholder="Backup Password" value={restorePassword} onChange={e => setRestorePassword(e.target.value)}
+                    className="w-full bg-obsidian border border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-bone focus:outline-none" />
+                  <button onClick={handleImportBackup} className="bg-red-500 text-white font-medium py-2 px-4 rounded-lg text-sm w-full">
+                    Verify & Restore
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <hr className="border-border-subtle" />
+
+          {/* Security Model Section */}
+          <section>
+            <h2 className="text-sm font-bold text-text-primary mb-6 tracking-wide">Security model</h2>
+            
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold text-sm text-text-primary mb-1">Require master password on launch</div>
+                  <div className="text-sm text-text-secondary">Your vault stays encrypted until you unlock it.</div>
+                </div>
+                <Toggle checked={requirePassword} onChange={() => setRequirePassword(!requirePassword)} />
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold text-sm text-text-primary mb-1">Activity ledger</div>
+                  <div className="text-sm text-text-secondary">Maintain a local, tamper-evident history.</div>
+                </div>
+                <Toggle checked={activityLedger} onChange={() => setActivityLedger(!activityLedger)} />
+              </div>
+            </div>
+          </section>
+
+          <hr className="border-border-subtle" />
+          
+          {/* Change Password Section (Hidden by default, standard UX practice) */}
+          <section>
+             <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold text-sm text-red-400 mb-1">Change master password</div>
+                  <div className="text-sm text-text-secondary">Invalidates all previous backup archives.</div>
+                </div>
+                <button 
+                  onClick={() => setActiveForm(activeForm === 'password' ? null : 'password')}
+                  className="border border-red-900/50 text-red-400 hover:bg-red-900/10 transition-colors text-sm rounded-lg px-5 py-2.5"
+                >
+                  Rekey vault
+                </button>
+              </div>
+
+              {activeForm === 'password' && (
+                <form onSubmit={handleChangePassword} className="bg-surface-raised border border-red-900/30 rounded-lg p-5 mt-6 space-y-4">
+                  <input type="password" placeholder="Current Password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required
+                    className="w-full bg-obsidian border border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-red-500 focus:outline-none" />
+                  <input type="password" placeholder="New Password (min 12 chars)" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={12}
+                    className="w-full bg-obsidian border border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-red-500 focus:outline-none" />
+                  <input type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={12}
+                    className="w-full bg-obsidian border border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-red-500 focus:outline-none" />
+                  <button type="submit" className="bg-red-500 text-white font-medium py-2 px-4 rounded-lg text-sm w-full">
+                    Confirm Rekey
+                  </button>
+                </form>
+              )}
+          </section>
+
+        </div>
       </div>
     </div>
   );
