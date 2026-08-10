@@ -11,6 +11,7 @@ import { NotesModule } from '../components/notes/NotesModule';
 import { TasksModule } from '../components/tasks/TasksModule';
 import { IncomeModule } from '../components/income/IncomeModule';
 import { DataWorkspaceModule } from '../components/data-workspace/DataWorkspaceModule';
+import { ActivityLogModule } from '../components/activity-log/ActivityLogModule';
 import { SettingsModule } from '../components/settings/SettingsModule';
 import { Key, LayoutGrid, FileEdit, CheckSquare, Mail, Database, Activity, SlidersHorizontal, Lock } from 'lucide-react';
 
@@ -113,7 +114,7 @@ function AppContent() {
         {currentView === 'tasks' && <TasksModule />}
         {currentView === 'income' && <IncomeModule />}
         {currentView === 'data' && <DataWorkspaceModule />}
-        {currentView === 'activity' && <div className="p-8 text-text-secondary">Activity Module</div>}
+        {currentView === 'activity' && <ActivityLogModule />}
         {currentView === 'settings' && <SettingsModule />}
       </main>
     </div>
