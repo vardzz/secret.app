@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ipcClient, VaultCredential } from '../../lib/ipc-client';
 import { resolveIcon } from '../../lib/icon-resolver';
-import { Plus, Search, Star, ExternalLink, Copy, Check, Key } from 'lucide-react';
+import { Plus, Search, Copy, Check, ChevronDown } from 'lucide-react';
 import { CredentialModal } from './CredentialModal';
 
 export function VaultList() {
@@ -41,89 +41,78 @@ export function VaultList() {
   );
 
   return (
-    <div className="w-full max-w-4xl mx-auto h-[80vh] flex flex-col pt-8">
-      <div className="flex justify-between items-center mb-8 px-4">
-        <h1 className="text-3xl font-bold">All Items</h1>
+    <div className="w-full max-w-5xl mx-auto h-full flex flex-col pt-12 px-12 relative overflow-y-auto">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h3 className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase mb-3">Vault Items</h3>
+          <h1 className="text-4xl font-bold text-text-primary tracking-tight">Credentials</h1>
+        </div>
         <button
           onClick={() => { setEditingCred(undefined); setIsModalOpen(true); }}
-          className="flex items-center gap-2 bg-bone text-obsidian px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 bg-bone text-obsidian px-5 py-2.5 rounded-lg font-medium hover:opacity-90 transition-opacity"
         >
           <Plus size={18} />
-          <span>New Item</span>
+          <span>Add credential</span>
         </button>
       </div>
 
-      <div className="relative mb-6 px-4">
-        <Search className="absolute left-7 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
-        <input
-          type="text"
-          placeholder="Search items..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-surface-raised border border-border-subtle rounded-xl py-3 pl-12 pr-4 text-text-primary focus:outline-none focus:border-border-default transition-colors"
-        />
+      {/* Search & Filter */}
+      <div className="flex gap-4 mb-8">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
+          <input
+            type="text"
+            placeholder="Search credentials"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-transparent border border-border-subtle rounded-xl py-3 pl-11 pr-4 text-text-primary focus:outline-none focus:border-border-default transition-colors text-sm"
+          />
+        </div>
+        <button className="flex items-center justify-between gap-4 px-5 py-3 bg-transparent border border-border-subtle rounded-xl hover:border-border-default transition-colors text-sm font-medium min-w-[120px]">
+          <span>All vaults</span>
+          <ChevronDown size={16} className="text-text-secondary" />
+        </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-10 space-y-2">
-        {filtered.length === 0 ? (
-          <div className="text-center text-text-secondary mt-20">
-            <p>No items found.</p>
-          </div>
-        ) : (
-          filtered.map(cred => {
-            const Icon = resolveIcon(cred.provider_url);
-            
-            return (
+      {/* Table */}
+      <div className="w-full pb-10">
+        <div className="grid grid-cols-[2fr_2fr_1fr_1fr] px-2 pb-4 border-b border-border-subtle">
+          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Name</div>
+          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Username</div>
+          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase">Last Used</div>
+          <div className="text-[11px] font-semibold text-text-tertiary tracking-widest uppercase text-right">Actions</div>
+        </div>
+        
+        <div className="flex flex-col">
+          {filtered.length === 0 ? (
+            <div className="text-center text-text-secondary mt-12">
+              <p>No credentials found.</p>
+            </div>
+          ) : (
+            filtered.map(cred => (
               <div 
                 key={cred.id}
                 onClick={() => { setEditingCred(cred); setIsModalOpen(true); }}
-                className="group flex items-center justify-between p-4 bg-surface-raised border border-border-subtle rounded-xl hover:bg-surface-raised-hover hover:border-border-default transition-all cursor-pointer"
+                className="grid grid-cols-[2fr_2fr_1fr_1fr] items-center px-2 py-5 border-b border-border-subtle hover:bg-surface-raised transition-colors cursor-pointer group"
               >
-                <div className="flex items-center gap-4 overflow-hidden">
-                  <div className="w-10 h-10 rounded-lg bg-surface-base border border-border-subtle flex items-center justify-center shrink-0">
-                    <Icon size={20} className="text-text-secondary" />
-                  </div>
-                  <div className="flex flex-col overflow-hidden">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-text-primary truncate">{cred.account_name}</span>
-                      {cred.is_favorite && <Star size={14} className="text-accent-solid fill-accent-solid" />}
-                    </div>
-                    <span className="text-sm text-text-secondary truncate">{cred.username_email}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => handleCopy(e, cred.username_email, cred.id + '_user')}
-                    className="p-2 hover:bg-surface-base rounded-lg text-text-secondary hover:text-text-primary transition-colors"
-                    title="Copy Username"
-                  >
-                    {copiedId === cred.id + '_user' ? <Check size={16} /> : <Copy size={16} />}
-                  </button>
+                <div className="font-semibold text-sm text-text-primary">{cred.account_name}</div>
+                <div className="text-sm font-mono text-text-secondary truncate pr-4">{cred.username_email}</div>
+                {/* Fallback to Today for UI demonstration since last_used doesn't exist */}
+                <div className="text-sm text-text-secondary font-mono">Today</div>
+                <div className="flex justify-end">
                   <button
                     onClick={(e) => handleCopy(e, cred.encrypted_password, cred.id + '_pass')}
-                    className="p-2 hover:bg-surface-base rounded-lg text-text-secondary hover:text-text-primary transition-colors"
+                    className="p-1.5 text-text-secondary hover:text-bone transition-colors rounded"
                     title="Copy Password"
                   >
-                    {copiedId === cred.id + '_pass' ? <Check size={16} /> : <Key size={16} />}
+                    {copiedId === cred.id + '_pass' ? <Check size={16} /> : <Copy size={16} />}
                   </button>
-                  {cred.provider_url && (
-                    <a
-                      href={cred.provider_url.startsWith('http') ? cred.provider_url : `https://${cred.provider_url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="p-2 hover:bg-surface-base rounded-lg text-text-secondary hover:text-text-primary transition-colors"
-                      title="Open URL"
-                    >
-                      <ExternalLink size={16} />
-                    </a>
-                  )}
                 </div>
               </div>
-            );
-          })
-        )}
+            ))
+          )}
+        </div>
       </div>
 
       <CredentialModal 
